@@ -156,7 +156,7 @@ final class Station {
     /** Info label shown only to players looking at this station (hidden by default). */
     TextDisplay hoverLabel() {
         if (hover == null || !hover.isValid()) {
-            hover = block.getWorld().spawn(top().add(0, 1.35, 0), TextDisplay.class, d -> {
+            hover = block.getWorld().spawn(top().add(0, 0.45, 0), TextDisplay.class, d -> {
                 d.setVisibleByDefault(false);
                 d.setBillboard(Display.Billboard.CENTER);
                 d.setBackgroundColor(Color.fromARGB(190, 15, 15, 25));
@@ -166,7 +166,7 @@ final class Station {
                 d.setPersistent(false);
                 d.addScoreboardTag(TAG);
                 d.setTransformation(new Transformation(new Vector3f(), new AxisAngle4f(),
-                        new Vector3f(0.55f, 0.55f, 0.55f), new AxisAngle4f()));
+                        new Vector3f(0.38f, 0.38f, 0.38f), new AxisAngle4f()));
             });
             hoverText = "";
         }

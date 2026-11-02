@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 /** Builds one floating sky kitchen from a text layout and keeps track of its stations. */
 final class Kitchen {
@@ -126,7 +125,6 @@ final class Kitchen {
                 for (int y = -3; y <= 7; y++) set(x, y, z, Material.AIR);
             }
         }
-        buildHall(w, d);
         // Kitchen floor: plain cream tiles (retextured white concrete).
         for (int z = 0; z < d; z++) {
             for (int x = 0; x < w; x++) {
@@ -152,51 +150,8 @@ final class Kitchen {
         }
     }
 
+    /** Area cleared around the kitchen on every build, so leftovers of older layouts disappear. */
     static final int HALL = 7;
-
-    /** A cosy dining hall around the kitchen: wooden floor, tables, chairs, plants and lanterns. */
-    private void buildHall(int w, int d) {
-        for (int x = -HALL; x < w + HALL; x++) {
-            for (int z = -HALL; z < d + HALL; z++) {
-                set(x, 0, z, Material.SPRUCE_PLANKS);
-                set(x, -1, z, Material.SPRUCE_PLANKS);
-                boolean edge = x == -HALL || z == -HALL || x == w + HALL - 1 || z == d + HALL - 1;
-                if (edge) {
-                    for (int y = 1; y <= 4; y++) set(x, y, z, Material.BRICKS);
-                    if ((x + z) % 4 == 0) {
-                        set(x, 2, z, Material.GLASS_PANE);
-                        set(x, 3, z, Material.GLASS_PANE);
-                    }
-                }
-            }
-        }
-        Random rnd = new Random(7);
-        List<int[]> spots = new ArrayList<>();
-        for (int x = -HALL + 3; x < w + HALL - 3; x += 5) {
-            spots.add(new int[]{x, -HALL + 3});
-            spots.add(new int[]{x, d + HALL - 4});
-        }
-        for (int z = 3; z < d - 2; z += 5) {
-            spots.add(new int[]{-HALL + 3, z});
-            spots.add(new int[]{w + HALL - 4, z});
-        }
-        for (int[] t : spots) {
-            int x = t[0], z = t[1];
-            set(x, 1, z, Material.DARK_OAK_FENCE);
-            set(x, 2, z, rnd.nextBoolean() ? Material.WHITE_CARPET : Material.RED_CARPET);
-            setData(x - 1, 1, z, "minecraft:oak_stairs[facing=east]");
-            setData(x + 1, 1, z, "minecraft:oak_stairs[facing=west]");
-        }
-        for (int[] c : new int[][]{{-HALL + 1, -HALL + 1}, {w + HALL - 2, -HALL + 1}, {-HALL + 1, d + HALL - 2}, {w + HALL - 2, d + HALL - 2}}) {
-            set(c[0], 1, c[1], Material.POTTED_AZALEA_BUSH);
-            set(c[0], 3, c[1], Material.LANTERN);
-            set(c[0], 2, c[1], Material.SPRUCE_FENCE);
-        }
-    }
-
-    private void setData(int x, int y, int z, String data) {
-        world.getBlockAt(ox + x, oy + y, oz + z).setBlockData(Bukkit.createBlockData(data), false);
-    }
 
     private void buildCell(char c, int x, int z) {
         Block b = world.getBlockAt(ox + x, oy + 1, oz + z);

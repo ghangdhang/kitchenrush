@@ -47,7 +47,6 @@ final class Game {
     static final int MAX_ORDERS = 4, CHOPS = 6, WASHES = 6, PLATES = 3, DIRTY_DELAY = 7 * 20;
     static final int PAN_COOK = 120, PAN_BURN = 200, FRY_COOK = 140, FRY_BURN = 220, POT_COOK = 200, POT_BURN = 260;
     static final TextColor GOLD = TextColor.color(0xFFD84A);
-    static final TextColor LABEL = TextColor.color(0xD8E4EC);
 
     record Order(Items.Recipe recipe, int total, int[] left) {
     }
@@ -678,7 +677,7 @@ final class Game {
             for (String h : o.recipe().hint) {
                 if (h.equals("+")) line.text("+", INK_SOFT);
                 else if (h.startsWith("x")) line.text(h, INK_SOFT);
-                else line.icon(h).text("(" + Items.name(h) + ")", INK_SOFT);
+                else line.icon(h);
             }
             line.gap(6);
             int pips = 8, full = (int) Math.ceil(frac * pips);
