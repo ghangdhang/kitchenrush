@@ -296,6 +296,186 @@
    "chars": [
     "\ue020"
    ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:font/card_l.png",
+   "height": 16,
+   "ascent": 12,
+   "chars": [
+    "\ue021"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:font/card_m.png",
+   "height": 16,
+   "ascent": 12,
+   "chars": [
+    "\ue022"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:font/card_r.png",
+   "height": 16,
+   "ascent": 12,
+   "chars": [
+    "\ue023"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:font/nav_l.png",
+   "height": 22,
+   "ascent": 17,
+   "chars": [
+    "\ue024"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:font/nav_m.png",
+   "height": 22,
+   "ascent": 17,
+   "chars": [
+    "\ue025"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:font/nav_r.png",
+   "height": 22,
+   "ascent": 17,
+   "chars": [
+    "\ue026"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:font/clock.png",
+   "height": 14,
+   "ascent": 12,
+   "chars": [
+    "\ue027"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:font/coin.png",
+   "height": 14,
+   "ascent": 12,
+   "chars": [
+    "\ue028"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/plate.png",
+   "height": 14,
+   "ascent": 12,
+   "chars": [
+    "\ue029"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:font/digit_0.png",
+   "height": 14,
+   "ascent": 12,
+   "chars": [
+    "\ue02a"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:font/digit_1.png",
+   "height": 14,
+   "ascent": 12,
+   "chars": [
+    "\ue02b"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:font/digit_2.png",
+   "height": 14,
+   "ascent": 12,
+   "chars": [
+    "\ue02c"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:font/digit_3.png",
+   "height": 14,
+   "ascent": 12,
+   "chars": [
+    "\ue02d"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:font/digit_4.png",
+   "height": 14,
+   "ascent": 12,
+   "chars": [
+    "\ue02e"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:font/digit_5.png",
+   "height": 14,
+   "ascent": 12,
+   "chars": [
+    "\ue02f"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:font/digit_6.png",
+   "height": 14,
+   "ascent": 12,
+   "chars": [
+    "\ue030"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:font/digit_7.png",
+   "height": 14,
+   "ascent": 12,
+   "chars": [
+    "\ue031"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:font/digit_8.png",
+   "height": 14,
+   "ascent": 12,
+   "chars": [
+    "\ue032"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:font/digit_9.png",
+   "height": 14,
+   "ascent": 12,
+   "chars": [
+    "\ue033"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:font/digit_colon.png",
+   "height": 14,
+   "ascent": 12,
+   "chars": [
+    "\ue034"
+   ]
   }
  ]
 }

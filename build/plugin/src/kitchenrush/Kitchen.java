@@ -47,7 +47,8 @@ final class Kitchen {
             "C........C........C",
             "CCCCCCCCCCCCCCCCCCC",
     };
-    static final Material COUNTER = Material.STRIPPED_OAK_WOOD;
+    /** Counters use sandstone, retextured by the pack as a wooden worktop over cabinet doors. */
+    static final Material COUNTER = Material.SANDSTONE;
 
     final String name;
     final World world;
@@ -115,53 +116,86 @@ final class Kitchen {
 
     void build() {
         int w = width(), d = layout.length;
-        for (int cx = (ox - 8) >> 4; cx <= (ox + w + 8) >> 4; cx++) {
-            for (int cz = (oz - 8) >> 4; cz <= (oz + d + 8) >> 4; cz++) world.getChunkAt(cx, cz).load(true);
+        for (int cx = (ox - HALL - 2) >> 4; cx <= (ox + w + HALL + 2) >> 4; cx++) {
+            for (int cz = (oz - HALL - 2) >> 4; cz <= (oz + d + HALL + 2) >> 4; cz++) world.getChunkAt(cx, cz).load(true);
         }
         clear();
         plates = returns = null;
-        for (int x = ox - 7; x <= ox + w + 6; x++) {
-            for (int z = oz - 7; z <= oz + d + 6; z++) {
-                for (int y = oy - 3; y <= oy + 6; y++) world.getBlockAt(x, y, z).setType(Material.AIR, false);
+        for (int x = -HALL - 1; x <= w + HALL; x++) {
+            for (int z = -HALL - 1; z <= d + HALL; z++) {
+                for (int y = -3; y <= 7; y++) set(x, y, z, Material.AIR);
             }
         }
-        buildClouds(w, d);
+        buildHall(w, d);
+        // Kitchen floor: plain cream tiles (retextured white concrete).
         for (int z = 0; z < d; z++) {
             for (int x = 0; x < w; x++) {
-                set(x, 0, z, (x + z) % 2 == 0 ? Material.WHITE_CONCRETE : Material.LIGHT_BLUE_CONCRETE);
-                set(x, -1, z, Material.WHITE_WOOL);
+                set(x, 0, z, Material.WHITE_CONCRETE);
+                set(x, -1, z, Material.SPRUCE_PLANKS);
                 buildCell(layout[z].charAt(x), x, z);
             }
         }
-        // Invisible walls just outside the counters so nobody falls off the cloud.
+        // Brick half-wall around the kitchen, with invisible barriers above so nobody climbs out.
         for (int x = -1; x <= w; x++) {
             for (int z = -1; z <= d; z++) {
                 if (x == -1 || z == -1 || x == w || z == d) {
-                    for (int y = 1; y <= 5; y++) set(x, y, z, Material.BARRIER);
+                    set(x, 0, z, Material.BRICKS);
+                    set(x, 1, z, Material.BRICKS);
+                    set(x, 2, z, Material.BRICKS);
+                    for (int y = 3; y <= 5; y++) set(x, y, z, Material.BARRIER);
                 }
             }
         }
-        // Striped awning over the back counters.
-        for (int x = 0; x < w; x++) set(x, 4, 0, x % 2 == 0 ? Material.RED_CARPET : Material.WHITE_CARPET);
-        for (int[] p : new int[][]{{-1, -1}, {w, -1}, {-1, d}, {w, d}}) set(p[0], 6, p[1], Material.LANTERN);
+        for (int[] p : new int[][]{{-1, -1}, {w, -1}, {-1, d}, {w, d}}) {
+            set(p[0], 3, p[1], Material.SPRUCE_FENCE);
+            set(p[0], 4, p[1], Material.LANTERN);
+        }
     }
 
-    private void buildClouds(int w, int d) {
-        Random rnd = new Random(42);
-        for (int x = -7; x <= w + 6; x++) {
-            for (int z = -7; z <= d + 6; z++) {
-                int dx = Math.max(Math.max(-x, x - (w - 1)), 0);
-                int dz = Math.max(Math.max(-z, z - (d - 1)), 0);
-                double dist = Math.sqrt(dx * dx + dz * dz);
-                if (dist == 0) continue;
-                double r = rnd.nextDouble();
-                if (dist <= 2.2 || (dist <= 5.5 && r < 0.75 - dist * 0.1)) {
-                    set(x, 0, z, Material.WHITE_WOOL);
-                    if (r < 0.5) set(x, -1, z, Material.WHITE_WOOL);
-                    if (dist > 3 && r < 0.12) set(x, 1, z, Material.WHITE_WOOL);
+    static final int HALL = 7;
+
+    /** A cosy dining hall around the kitchen: wooden floor, tables, chairs, plants and lanterns. */
+    private void buildHall(int w, int d) {
+        for (int x = -HALL; x < w + HALL; x++) {
+            for (int z = -HALL; z < d + HALL; z++) {
+                set(x, 0, z, Material.SPRUCE_PLANKS);
+                set(x, -1, z, Material.SPRUCE_PLANKS);
+                boolean edge = x == -HALL || z == -HALL || x == w + HALL - 1 || z == d + HALL - 1;
+                if (edge) {
+                    for (int y = 1; y <= 4; y++) set(x, y, z, Material.BRICKS);
+                    if ((x + z) % 4 == 0) {
+                        set(x, 2, z, Material.GLASS_PANE);
+                        set(x, 3, z, Material.GLASS_PANE);
+                    }
                 }
             }
         }
+        Random rnd = new Random(7);
+        List<int[]> spots = new ArrayList<>();
+        for (int x = -HALL + 3; x < w + HALL - 3; x += 5) {
+            spots.add(new int[]{x, -HALL + 3});
+            spots.add(new int[]{x, d + HALL - 4});
+        }
+        for (int z = 3; z < d - 2; z += 5) {
+            spots.add(new int[]{-HALL + 3, z});
+            spots.add(new int[]{w + HALL - 4, z});
+        }
+        for (int[] t : spots) {
+            int x = t[0], z = t[1];
+            set(x, 1, z, Material.DARK_OAK_FENCE);
+            set(x, 2, z, rnd.nextBoolean() ? Material.WHITE_CARPET : Material.RED_CARPET);
+            setData(x - 1, 1, z, "minecraft:oak_stairs[facing=east]");
+            setData(x + 1, 1, z, "minecraft:oak_stairs[facing=west]");
+        }
+        for (int[] c : new int[][]{{-HALL + 1, -HALL + 1}, {w + HALL - 2, -HALL + 1}, {-HALL + 1, d + HALL - 2}, {w + HALL - 2, d + HALL - 2}}) {
+            set(c[0], 1, c[1], Material.POTTED_AZALEA_BUSH);
+            set(c[0], 3, c[1], Material.LANTERN);
+            set(c[0], 2, c[1], Material.SPRUCE_FENCE);
+        }
+    }
+
+    private void setData(int x, int y, int z, String data) {
+        world.getBlockAt(ox + x, oy + y, oz + z).setBlockData(Bukkit.createBlockData(data), false);
     }
 
     private void buildCell(char c, int x, int z) {
@@ -213,13 +247,13 @@ final class Kitchen {
                     default -> "bread";
                 };
                 s = add(new Station(Station.Kind.CRATE, b, type));
-                s.addExtra(s.flatItem(s.top().add(0, 0.03, 0), Items.of(type), 0.7f));
+                s.addExtra(s.restItem(s.top(), Items.of(type), 0.55f));
                 s.label(Items.name(type), 0.7, 0.5f);
             }
             case 'P' -> {
                 b.setBlockData(Bukkit.createBlockData("minecraft:smoker[facing=south,lit=true]"), false);
                 s = add(new Station(Station.Kind.PAN, b, null));
-                s.addExtra(s.flatItem(s.top().add(0, 0.02, 0), Items.of("pan"), 0.9f));
+                s.addExtra(s.restItem(s.top(), Items.of("pan"), 0.85f));
                 s.label("프라이팬", 1.0, 0.5f);
             }
             case 'Y' -> {

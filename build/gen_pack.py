@@ -288,6 +288,416 @@ ITEMS = ['tomato', 'tomato_chopped', 'lettuce', 'lettuce_chopped', 'meat', 'patt
          'plate_tomato', 'plate_fish', 'plate_fries', 'plate_fishfries', 'plate_special', 'plate_fishset']
 ICONS_ONLY = ['clock', 'coin']
 
+# ---------------------------------------------------------------- 3D models
+# Every food is built from cuboids that sample one pixel of a shared palette texture,
+# so Minecraft's face shading gives them depth. Local coordinates: x/z centred on 0, y from 0 up.
+PAL = {}
+PAL_ORDER = []
+
+
+def pal(name, h):
+    PAL[name] = hexc(h)
+    PAL_ORDER.append(name)
+
+
+for _n, _h in [('red', 'e8402a'), ('red_d', 'b52a1b'), ('red_l', 'ff8a6a'), ('pink_in', 'ffb09a'),
+               ('green', '6cc23a'), ('green_d', '3f8f22'), ('green_l', 'b4ee6a'), ('leaf', '2f8a2a'),
+               ('meat', 'd9475a'), ('meat_d', 'a8303f'), ('fat', 'ffe0e4'), ('bone', 'f4efe2'),
+               ('patty_raw', 'e8808c'), ('patty_raw_d', 'c95564'), ('patty', '8a4b2a'), ('patty_d', '5c2f18'),
+               ('bun', 'e3a14a'), ('bun_d', 'c07a2a'), ('bun_in', 'f6dca8'), ('sesame', 'fff6dc'),
+               ('fish', '5aa0d8'), ('fish_d', '3a74a8'), ('fish_belly', 'cfe6f6'), ('fish_meat', 'ffb7a1'),
+               ('fry', 'e0a23c'), ('fry_l', 'f6c75e'), ('fry_d', 'b0741f'),
+               ('potato', 'c99a5a'), ('potato_d', '9a7038'), ('potato_in', 'f3d98a'), ('carton', 'd8342c'),
+               ('plate', 'f7f7f4'), ('plate_in', 'e2e8ec'), ('plate_rim', 'd2d8dc'),
+               ('soup', 'e2572f'), ('soup_l', 'ff9466'), ('dirt', '8a6a3a'), ('dirt_l', 'b09060'),
+               ('char', '2a2a2a'), ('char_l', '4a4a4a'), ('smoke', 'a8a8a8'), ('pan', '3b3f45'), ('pan_in', '575d66'),
+               ('handle', '7a5230'), ('black', '1a1a1a'), ('white', 'ffffff')]:
+    pal(_n, _h)
+
+
+def uv(col):
+    i = PAL_ORDER.index(col)
+    x, y = i % 16, i // 16
+    return [x + 0.25, y + 0.25, x + 0.75, y + 0.75]
+
+
+class Model:
+    def __init__(self):
+        self.elements = []
+
+    def box(self, t, x0, y0, z0, x1, y1, z1, col, top=None):
+        dx, dy, dz, s = t
+        f = [8 + dx + x0 * s, dy + y0 * s, 8 + dz + z0 * s]
+        to = [8 + dx + x1 * s, dy + y1 * s, 8 + dz + z1 * s]
+        f, to = [round(min(a, b), 3) for a, b in zip(f, to)], [round(max(a, b), 3) for a, b in zip(f, to)]
+        for i in range(3):
+            if to[i] - f[i] < 0.01:
+                to[i] = f[i] + 0.01
+        faces = {d: {'uv': uv(top if (top and d == 'up') else col), 'texture': '#p'}
+                 for d in ('north', 'south', 'east', 'west', 'up', 'down')}
+        self.elements.append({'from': f, 'to': to, 'faces': faces})
+
+    def disc(self, t, r, y0, y1, col, top=None):
+        self.box(t, -r, y0, -r * 0.55, r, y1, r * 0.55, col, top)
+        self.box(t, -r * 0.55, y0, -r, r * 0.55, y1, r, col, top)
+        self.box(t, -r * 0.82, y0, -r * 0.82, r * 0.82, y1, r * 0.82, col, top)
+
+    def ball(self, t, r, col, top=None, squash=1.0):
+        steps = 5
+        for k in range(steps):
+            ya, yb = -r + 2 * r * k / steps, -r + 2 * r * (k + 1) / steps
+            ym = (ya + yb) / 2
+            rr = max(0.4, (r * r - ym * ym) ** 0.5)
+            self.disc(t, rr, (ya + r) * squash, (yb + r) * squash, col, top if k == steps - 1 else None)
+
+    def json(self):
+        return {
+            'textures': {'p': 'kitchen:item/palette', 'particle': 'kitchen:item/palette'},
+            'elements': self.elements,
+            'display': {
+                'fixed': {'rotation': [0, 0, 0], 'translation': [0, 0, 0], 'scale': [1, 1, 1]},
+                'gui': {'rotation': [30, 225, 0], 'translation': [0, 3, 0], 'scale': [0.85, 0.85, 0.85]},
+                'ground': {'translation': [0, 3, 0], 'scale': [0.5, 0.5, 0.5]},
+                'firstperson_righthand': {'rotation': [0, 45, 0], 'translation': [0, 4, 0], 'scale': [0.6, 0.6, 0.6]},
+                'firstperson_lefthand': {'rotation': [0, 45, 0], 'translation': [0, 4, 0], 'scale': [0.6, 0.6, 0.6]},
+                'thirdperson_righthand': {'rotation': [75, 45, 0], 'translation': [0, 2.5, 0], 'scale': [0.5, 0.5, 0.5]},
+                'thirdperson_lefthand': {'rotation': [75, 45, 0], 'translation': [0, 2.5, 0], 'scale': [0.5, 0.5, 0.5]},
+                'head': {'translation': [0, 14, 0]},
+            }}
+
+
+def T(dx=0.0, dy=0.0, dz=0.0, s=1.0):
+    return (dx, dy, dz, s)
+
+
+def m_tomato(m, t):
+    m.ball(t, 3.6, 'red', squash=0.9)
+    dx, dy, dz, s = t
+    m.box(T(dx, dy, dz, s), -0.4, 6.3, -0.4, 0.4, 7.6, 0.4, 'leaf')
+    m.box(T(dx, dy, dz, s), -1.6, 6.3, -0.4, 1.6, 6.8, 0.4, 'leaf')
+    m.box(T(dx, dy, dz, s), -0.4, 6.3, -1.6, 0.4, 6.8, 1.6, 'leaf')
+
+
+def m_tomato_slices(m, t):
+    dx, dy, dz, s = t
+    for i, (x, z) in enumerate(((-2.4, -1.2), (2.2, -1.6), (0, 2.2))):
+        m.disc(T(dx + x * s, dy + i * 0.15 * s, dz + z * s, s), 2.2, 0, 0.9, 'red', top='pink_in')
+        m.box(T(dx + x * s, dy + i * 0.15 * s, dz + z * s, s), -0.35, 0.9, -0.35, 0.35, 0.95, 0.35, 'sesame')
+
+
+def m_lettuce(m, t):
+    m.ball(t, 4.2, 'green', top='green_l', squash=0.85)
+    dx, dy, dz, s = t
+    m.box(T(dx, dy, dz, s), -0.3, 0.5, -4.1, 0.3, 6.6, 4.1, 'green_d')
+
+
+def m_lettuce_flakes(m, t):
+    dx, dy, dz, s = t
+    for i, (x, z, c) in enumerate(((-3, -2, 'green'), (2.5, -2.5, 'green_l'), (-1.5, 2.5, 'green_l'),
+                                   (3, 2, 'green'), (0, 0, 'green_d'))):
+        m.box(T(dx, dy, dz, s), x - 1.5, i * 0.3, z - 1.2, x + 1.5, i * 0.3 + 0.6, z + 1.2, c)
+
+
+def m_patty(m, t, raw=False):
+    if raw:
+        m.disc(t, 3.6, 0, 1.6, 'patty_raw', top='patty_raw')
+        dx, dy, dz, s = t
+        for x, z in ((-1.5, -1), (1, 1.2), (1.8, -1.5)):
+            m.box(T(dx, dy, dz, s), x - 0.4, 1.6, z - 0.4, x + 0.4, 1.65, z + 0.4, 'patty_raw_d')
+    else:
+        m.disc(t, 3.6, 0, 1.6, 'patty', top='patty')
+        dx, dy, dz, s = t
+        for x in (-1.8, 0, 1.8):
+            m.box(T(dx, dy, dz, s), x - 0.3, 1.6, -2.6, x + 0.3, 1.65, 2.6, 'patty_d')
+
+
+def m_bun_top(m, t):
+    dx, dy, dz, s = t
+    m.disc(T(dx, dy, dz, s), 4, 0, 1.2, 'bun_in', top='bun')
+    m.disc(T(dx, dy, dz, s), 3.6, 1.2, 2.4, 'bun')
+    m.disc(T(dx, dy, dz, s), 2.6, 2.4, 3.1, 'bun')
+    for x, z in ((-1.5, -1), (1.2, -1.6), (0.3, 1.4), (-2, 1.2), (2.2, 0.8)):
+        y = 3.1 if abs(x) < 2.6 and abs(z) < 2.6 and (x * x + z * z) < 4 else 2.4
+        m.box(T(dx, dy, dz, s), x - 0.3, y, z - 0.2, x + 0.3, y + 0.15, z + 0.2, 'sesame')
+
+
+def m_bun_bottom(m, t):
+    m.disc(t, 4, 0, 1.2, 'bun_d', top='bun_in')
+
+
+def m_fish(m, t):
+    dx, dy, dz, s = t
+    m.box(t, -4, 0, -1.6, 3, 3, 1.6, 'fish', top='fish')
+    m.box(t, -4, 0, -1.4, 3, 1, 1.4, 'fish_belly')
+    m.box(t, 3, 0.8, -0.8, 4, 2.2, 0.8, 'fish')
+    m.box(t, 4, 0.2, -0.3, 5.6, 2.8, 0.3, 'fish_d')
+    m.box(t, -3.2, 1.8, -1.65, -2.6, 2.4, 1.65, 'black')
+    m.box(t, -1, 3, -0.3, 1.5, 3.8, 0.3, 'fish_d')
+
+
+def m_fish_pieces(m, t):
+    dx, dy, dz, s = t
+    m.box(t, -3.6, 0, -2.4, -0.4, 1.6, -0.2, 'fish_meat')
+    m.box(t, 0.4, 0, 0.2, 3.6, 1.6, 2.4, 'fish_meat')
+    m.box(t, 3.6, 0, 0.2, 3.9, 1.6, 2.4, 'fish')
+
+
+def m_fish_fried(m, t):
+    m.box(t, -3.6, 0, -1.5, 3.6, 1.8, 1.5, 'fry', top='fry_l')
+    m.box(t, -2.6, 0, -2, 2.6, 1.5, 2, 'fry', top='fry_l')
+    m.box(t, -1.5, 1.8, -0.8, -0.8, 2, -0.2, 'fry_d')
+    m.box(t, 1, 1.8, 0.3, 1.7, 2, 0.9, 'fry_d')
+
+
+def m_potato(m, t):
+    m.ball(t, 3.4, 'potato', squash=0.75)
+    dx, dy, dz, s = t
+    for x, y, z in ((-1.5, 3.5, -1), (1.4, 2.2, 3.2), (2.3, 4, 0.5)):
+        m.box(T(dx, dy, dz, s), x - 0.35, y, z - 0.35, x + 0.35, y + 0.4, z + 0.35, 'potato_d')
+
+
+def m_potato_sticks(m, t):
+    for i, x in enumerate((-3, -1.5, 0, 1.5, 3)):
+        m.box(t, x - 0.6, i % 2 * 0.2, -3, x + 0.6, 1.2 + i % 2 * 0.2, 3, 'potato_in')
+
+
+def m_fries(m, t):
+    dx, dy, dz, s = t
+    for i, (x, z) in enumerate(((-1.4, -0.6), (-0.4, 0.5), (0.6, -0.5), (1.5, 0.4), (0, -0.1), (-1, 0.7))):
+        h = 6.5 + (i % 3) * 0.8
+        m.box(t, x - 0.4, 2, z - 0.4, x + 0.4, h, z + 0.4, 'fry_l')
+    m.box(t, -2.4, 0, -1.6, 2.4, 4, 1.6, 'carton')
+    m.box(t, -2.5, 3.2, -1.65, 2.5, 3.5, 1.65, 'white')
+
+
+def m_plate(m, t, dirty=False):
+    m.disc(t, 6.4, 0, 0.5, 'plate_rim', top='plate')
+    m.disc(t, 6.4, 0.5, 0.9, 'plate', top='plate')
+    m.disc(t, 4.6, 0.9, 0.95, 'plate_in', top='plate_in')
+    if dirty:
+        for x, z, c in ((-2.5, -1, 'dirt'), (2, 1.8, 'dirt_l'), (0.5, -2.5, 'dirt'), (-1, 2.4, 'dirt_l'), (3, -1.5, 'dirt')):
+            m.box(t, x - 0.9, 0.95, z - 0.6, x + 0.9, 1.0, z + 0.6, c)
+
+
+def m_soup_disc(m, t):
+    m.disc(t, 6.6, 0, 0.6, 'soup', top='soup')
+    for x, z in ((-2, -1), (1.5, 2), (2.5, -2.2), (-3, 2.4)):
+        m.box(t, x - 0.6, 0.6, z - 0.6, x + 0.6, 0.65, z + 0.6, 'soup_l')
+
+
+def m_bowl_soup(m, t):
+    m.disc(t, 4, 0, 2.6, 'plate', top='plate')
+    m.disc(t, 3.3, 2.6, 2.7, 'soup', top='soup')
+    dx, dy, dz, s = t
+    m.box(t, -1, 2.7, -0.5, 0.2, 2.75, 0.3, 'soup_l')
+
+
+def m_burnt(m, t):
+    m.disc(t, 3.6, 0, 1.6, 'char', top='char_l')
+    m.box(t, -1.2, 2.5, -1, 0.2, 3.9, 0.4, 'smoke')
+    m.box(t, 0.4, 4.4, -0.2, 1.4, 5.4, 0.8, 'smoke')
+
+
+def m_pan(m, t):
+    m.disc(t, 5.2, 0, 0.6, 'pan', top='pan_in')
+    for x0, z0, x1, z1 in ((-5.2, -2.8, -4.6, 2.8), (4.6, -2.8, 5.2, 2.8), (-2.8, -5.2, 2.8, -4.6), (-2.8, 4.6, 2.8, 5.2)):
+        m.box(t, x0, 0.6, z0, x1, 1.4, z1, 'pan')
+    m.box(t, 5.2, 0.6, -0.6, 9, 1.2, 0.6, 'handle')
+
+
+def m_meat(m, t):
+    m.box(t, -4.5, 0, -3, 3.5, 2, 3, 'meat', top='meat')
+    m.box(t, -3.5, 0, -3.6, 2.5, 2, 3.6, 'meat', top='meat')
+    m.box(t, -4.5, 2, -0.3, 3.5, 2.05, 0.4, 'fat')
+    m.box(t, -4.6, 0, -3, -4.4, 2, 3, 'fat')
+    m.box(t, 3.5, 0.6, -0.6, 6.2, 1.4, 0.6, 'bone')
+    m.box(t, 5.8, 0.4, -1.1, 6.8, 1.6, 1.1, 'bone')
+
+
+FOOD_3D = {
+    'tomato': lambda m: m_tomato(m, T()),
+    'tomato_chopped': lambda m: m_tomato_slices(m, T()),
+    'lettuce': lambda m: m_lettuce(m, T()),
+    'lettuce_chopped': lambda m: m_lettuce_flakes(m, T()),
+    'meat': lambda m: m_meat(m, T()),
+    'patty_raw': lambda m: m_patty(m, T(), raw=True),
+    'patty_cooked': lambda m: m_patty(m, T()),
+    'burnt': lambda m: m_burnt(m, T()),
+    'bread': lambda m: (m_bun_bottom(m, T()), m_bun_top(m, T(dy=1.4))),
+    'fish': lambda m: m_fish(m, T()),
+    'fish_chopped': lambda m: m_fish_pieces(m, T()),
+    'fish_fried': lambda m: m_fish_fried(m, T()),
+    'potato': lambda m: m_potato(m, T()),
+    'potato_chopped': lambda m: m_potato_sticks(m, T()),
+    'fries': lambda m: m_fries(m, T()),
+    'soup': lambda m: m_soup_disc(m, T()),
+    'pan': lambda m: m_pan(m, T()),
+    'plate': lambda m: m_plate(m, T()),
+    'dirty_plate': lambda m: m_plate(m, T(), dirty=True),
+    'plate_salad': lambda m: (m_plate(m, T()), m_lettuce_flakes(m, T(dy=0.95, s=0.8)),
+                              m_tomato_slices(m, T(dx=0.5, dy=1.6, dz=-0.5, s=0.45))),
+    'plate_tomato': lambda m: (m_plate(m, T()), m_tomato_slices(m, T(dy=0.95, s=0.8))),
+    'plate_bread': lambda m: (m_plate(m, T()), m_bun_bottom(m, T(dy=0.95)), m_bun_top(m, T(dy=2.2))),
+    'plate_patty': lambda m: (m_plate(m, T()), m_patty(m, T(dy=0.95))),
+    'plate_burger': lambda m: (m_plate(m, T()), m_bun_bottom(m, T(dy=0.95)), m_patty(m, T(dy=2.15, s=1.05)),
+                               m_bun_top(m, T(dy=3.85))),
+    'plate_special': lambda m: (m_plate(m, T()), m_bun_bottom(m, T(dy=0.95)), m_patty(m, T(dy=2.15, s=1.05)),
+                                m.disc(T(dy=3.85), 3.4, 0, 0.6, 'red', top='pink_in'),
+                                m.disc(T(dy=4.45), 4.3, 0, 0.5, 'green', top='green_l'),
+                                m_bun_top(m, T(dy=4.95))),
+    'plate_soup': lambda m: (m_plate(m, T()), m_bowl_soup(m, T(dy=0.95))),
+    'plate_fish': lambda m: (m_plate(m, T()), m_fish_fried(m, T(dy=0.95, s=0.9))),
+    'plate_fries': lambda m: (m_plate(m, T()), m_fries(m, T(dy=0.95, s=0.85))),
+    'plate_fishfries': lambda m: (m_plate(m, T()), m_fish_fried(m, T(dx=-1.6, dy=0.95, s=0.7)),
+                                  m_fries(m, T(dx=2.6, dy=0.95, dz=0.5, s=0.65))),
+    'plate_fishset': lambda m: (m_plate(m, T()), m_fish_fried(m, T(dx=-1.8, dy=0.95, dz=-1.2, s=0.65)),
+                                m_fries(m, T(dx=2.8, dy=0.95, dz=-0.6, s=0.6)),
+                                m_lettuce_flakes(m, T(dx=-1, dy=0.95, dz=2.8, s=0.45)),
+                                m_tomato_slices(m, T(dx=1.8, dy=0.95, dz=2.8, s=0.4))),
+}
+
+palette = Canvas(16, 16)
+for i, n in enumerate(PAL_ORDER):
+    palette.set(i % 16, i // 16, PAL[n])
+
+# ---------------------------------------------------------------- building block textures
+import random as _random
+
+
+def noise_fill(c, base, amount, seed, x0=0, y0=0, x1=15, y1=15):
+    rnd = _random.Random(seed)
+    for y in range(y0, y1 + 1):
+        for x in range(x0, x1 + 1):
+            d = rnd.randint(-amount, amount)
+            c.set(x, y, tuple(max(0, min(255, v + d)) for v in base[:3]) + (255,))
+
+
+def tex_floor():
+    c = Canvas()
+    noise_fill(c, hexc('efe2c6'), 4, 1)
+    return c
+
+
+def tex_counter_top():
+    c = Canvas()
+    noise_fill(c, hexc('e8c086'), 5, 2)
+    for y in (3, 8, 13):
+        for x in range(16):
+            c.set(x, y, hexc('d4a76a'))
+    for x in range(16):
+        c.set(x, 0, hexc('f3d6a6'))
+        c.set(x, 15, hexc('c8975a'))
+    return c
+
+
+def tex_counter_side():
+    c = Canvas()
+    noise_fill(c, hexc('c6864a'), 5, 3)
+    for x in range(16):
+        c.set(x, 0, hexc('f0cf98'))
+        c.set(x, 1, hexc('e2b77a'))
+        c.set(x, 15, hexc('7a4a22'))
+    for x0 in (1, 9):
+        for y in range(3, 14):
+            for x in range(x0, x0 + 6):
+                edge = y in (3, 13) or x in (x0, x0 + 5)
+                c.set(x, y, hexc('9a6232') if edge else hexc('b87a42'))
+        c.set(x0 + (4 if x0 == 1 else 1), 8, hexc('f2d27a'))
+        c.set(x0 + (4 if x0 == 1 else 1), 9, hexc('f2d27a'))
+    return c
+
+
+def tex_counter_bottom():
+    c = Canvas()
+    noise_fill(c, hexc('6e4424'), 4, 4)
+    return c
+
+
+def tex_bricks():
+    c = Canvas()
+    noise_fill(c, hexc('c4613a'), 8, 5)
+    mortar = hexc('e8d2ae')
+    for y in (3, 7, 11, 15):
+        for x in range(16):
+            c.set(x, y, mortar)
+    for row, y0 in enumerate((0, 4, 8, 12)):
+        for x in ((7, 15) if row % 2 == 0 else (3, 11)):
+            for y in range(y0, y0 + 3):
+                c.set(x, y, mortar)
+    return c
+
+
+BLOCK_TEXTURES = {
+    'white_concrete': tex_floor,
+    'sandstone_top': tex_counter_top,
+    'sandstone': tex_counter_side,
+    'sandstone_bottom': tex_counter_bottom,
+    'bricks': tex_bricks,
+}
+
+# ---------------------------------------------------------------- HUD panels and big digits
+DIGITS = {
+    '0': ['01110', '10001', '10011', '10101', '11001', '10001', '01110'],
+    '1': ['00100', '01100', '00100', '00100', '00100', '00100', '01110'],
+    '2': ['01110', '10001', '00001', '00110', '01000', '10000', '11111'],
+    '3': ['11110', '00001', '00001', '01110', '00001', '00001', '11110'],
+    '4': ['00010', '00110', '01010', '10010', '11111', '00010', '00010'],
+    '5': ['11111', '10000', '11110', '00001', '00001', '10001', '01110'],
+    '6': ['00110', '01000', '10000', '11110', '10001', '10001', '01110'],
+    '7': ['11111', '00001', '00010', '00100', '01000', '01000', '01000'],
+    '8': ['01110', '10001', '10001', '01110', '10001', '10001', '01110'],
+    '9': ['01110', '10001', '10001', '01111', '00001', '00010', '01100'],
+    ':': ['0', '1', '1', '0', '1', '1', '0'],
+}
+
+
+def digit_canvas(rows):
+    w = len(rows[0])
+    c = Canvas(w + 1, 8)
+    for y, row in enumerate(rows):
+        for x, ch in enumerate(row):
+            if ch == '1':
+                c.set(x, y, WHITE)
+                c.set(x + 1, y + 1, (60, 40, 30, 255)) if c.get(x + 1, y + 1) is None else None
+    return c
+
+
+def panel(w, h, fill, edge, light):
+    c = Canvas(w, h)
+    for y in range(h):
+        for x in range(w):
+            c.set(x, y, fill)
+    for x in range(w):
+        c.set(x, 0, edge)
+        c.set(x, h - 1, edge)
+        c.set(x, 1, light)
+    return c
+
+
+def panel_cap(w, h, fill, edge, light, left):
+    c = panel(w, h, fill, edge, light)
+    for y in range(h):
+        c.set(0 if left else w - 1, y, edge)
+    corner = [(0, 0), (0, h - 1)] if left else [(w - 1, 0), (w - 1, h - 1)]
+    for x, y in corner:
+        c.p[y][x] = None
+    if not left:
+        c.p[1][w - 1] = edge
+    return c
+
+
+CARD = (hexc('fff4dc'), hexc('4a3426'), hexc('ffffff'))
+NAVY = (hexc('2b3a57'), hexc('141c2c'), hexc('4c6088'))
+HUD_GLYPHS = [
+    # name, canvas, height, ascent
+    ('card_l', panel_cap(3, 16, *CARD, left=True), 16, 12),
+    ('card_m', panel(8, 16, *CARD), 16, 12),
+    ('card_r', panel_cap(3, 16, *CARD, left=False), 16, 12),
+    ('nav_l', panel_cap(3, 22, *NAVY, left=True), 22, 17),
+    ('nav_m', panel(8, 22, *NAVY), 22, 17),
+    ('nav_r', panel_cap(3, 22, *NAVY, left=False), 22, 17),
+]
+
 files = {}
 glyphs = []
 providers = []
@@ -302,8 +712,13 @@ for name in ITEMS + ICONS_ONLY:
     folder = 'item' if name in ITEMS else 'font'
     files[f'assets/kitchen/textures/{folder}/{name}.png'] = png(c)
     if name in ITEMS:
-        files[f'assets/kitchen/models/item/{name}.json'] = json.dumps(
-            {'parent': 'minecraft:item/generated', 'textures': {'layer0': f'kitchen:item/{name}'}})
+        if name in FOOD_3D:
+            mdl = Model()
+            FOOD_3D[name](mdl)
+            files[f'assets/kitchen/models/item/{name}.json'] = json.dumps(mdl.json())
+        else:
+            files[f'assets/kitchen/models/item/{name}.json'] = json.dumps(
+                {'parent': 'minecraft:item/generated', 'textures': {'layer0': f'kitchen:item/{name}'}})
         files[f'assets/kitchen/items/{name}.json'] = json.dumps(
             {'model': {'type': 'minecraft:model', 'model': f'kitchen:item/{name}'}})
     ch = chr(code)
@@ -318,6 +733,35 @@ files['assets/kitchen/textures/font/pip.png'] = png(pip)
 ch = chr(code)
 providers.append({'type': 'bitmap', 'file': 'kitchen:font/pip.png', 'height': 7, 'ascent': 7, 'chars': [ch]})
 glyphs.append(f'pip {ord(ch):04X} {pip.width() + 1}')
+
+files['assets/kitchen/textures/item/palette.png'] = png(palette)
+
+for name, cv, height, ascent in HUD_GLYPHS:
+    code += 1
+    ch = chr(code)
+    files[f'assets/kitchen/textures/font/{name}.png'] = png(cv)
+    providers.append({'type': 'bitmap', 'file': f'kitchen:font/{name}.png', 'height': height, 'ascent': ascent, 'chars': [ch]})
+    glyphs.append(f'{name} {ord(ch):04X} {int(0.5 + cv.width() * height / cv.h) + 1}')
+
+# Big icons and digits for the bottom score/timer panels.
+for name in ('clock', 'coin', 'plate'):
+    code += 1
+    ch = chr(code)
+    folder = 'item' if name in ITEMS else 'font'
+    cv = draw(name)
+    providers.append({'type': 'bitmap', 'file': f'kitchen:{folder}/{name}.png', 'height': 14, 'ascent': 12, 'chars': [ch]})
+    glyphs.append(f'big_{name} {ord(ch):04X} {int(0.5 + cv.width() * 14 / 16) + 1}')
+for d, rows in DIGITS.items():
+    code += 1
+    ch = chr(code)
+    cv = digit_canvas(rows)
+    key = 'colon' if d == ':' else d
+    files[f'assets/kitchen/textures/font/digit_{key}.png'] = png(cv)
+    providers.append({'type': 'bitmap', 'file': f'kitchen:font/digit_{key}.png', 'height': 14, 'ascent': 12, 'chars': [ch]})
+    glyphs.append(f'digit_{key} {ord(ch):04X} {int(0.5 + cv.width() * 14 / 8) + 1}')
+
+for block, fn in BLOCK_TEXTURES.items():
+    files[f'assets/minecraft/textures/block/{block}.png'] = png(fn())
 
 files['assets/kitchen/font/icons.json'] = json.dumps({'providers': providers}, ensure_ascii=True, indent=1)
 
@@ -364,4 +808,67 @@ for y in range(sheet.h):
                 big.p[y * 6 + yy][x * 6 + xx] = col
 with open(os.path.join(os.path.dirname(OUT_GLYPHS), 'preview.png'), 'wb') as f:
     f.write(png(big))
+# Isometric preview of the 3D models and block textures (not part of the pack).
+def render_iso(model, k=6):
+    W, H = 34 * k, 30 * k
+    c = Canvas(W, H)
+    zbuf = [[-1e9] * W for _ in range(H)]
+    ox, oy = W / 2, H * 0.7
+
+    def proj(x, y, z):
+        x, z = x - 8, z - 8
+        return ox + (x - z) * k * 0.87, oy + (x + z) * k * 0.5 - y * k
+
+    for el in model.elements:
+        (x0, y0, z0), (x1, y1, z1) = el['from'], el['to']
+        for face, shade in (('up', 1.0), ('south', 0.78), ('east', 0.62)):
+            u = el['faces'][face]['uv']
+            col = PAL[PAL_ORDER[int(u[1]) * 16 + int(u[0])]]
+            col = tuple(int(v * shade) for v in col[:3]) + (255,)
+            steps = 24
+            for i in range(steps + 1):
+                for j in range(steps + 1):
+                    a, b = i / steps, j / steps
+                    if face == 'up':
+                        p = (x0 + (x1 - x0) * a, y1, z0 + (z1 - z0) * b)
+                    elif face == 'south':
+                        p = (x0 + (x1 - x0) * a, y0 + (y1 - y0) * b, z1)
+                    else:
+                        p = (x1, y0 + (y1 - y0) * b, z0 + (z1 - z0) * a)
+                    sx, sy = proj(*p)
+                    depth = p[0] + p[2] + p[1] * 0.01
+                    px, py = int(sx), int(sy)
+                    if 0 <= px < W and 0 <= py < H and depth >= zbuf[py][px]:
+                        zbuf[py][px] = depth
+                        c.p[py][px] = col
+    return c
+
+
+iso_names = list(FOOD_3D)
+cols = 8
+tile_w, tile_h = 34 * 6, 30 * 6
+sheet3d = Canvas(tile_w * cols, tile_h * ((len(iso_names) + cols - 1) // cols) + 16 * 8)
+for i, n in enumerate(iso_names):
+    mdl = Model()
+    FOOD_3D[n](mdl)
+    r = render_iso(mdl)
+    bx, by = (i % cols) * tile_w, (i // cols) * tile_h
+    for y in range(r.h):
+        for x in range(r.w):
+            if r.p[y][x]:
+                sheet3d.set(bx + x, by + y, r.p[y][x])
+by = tile_h * ((len(iso_names) + cols - 1) // cols)
+for i, (block, fn) in enumerate(BLOCK_TEXTURES.items()):
+    t = fn()
+    for y in range(16):
+        for x in range(16):
+            for yy in range(8):
+                for xx in range(8):
+                    sheet3d.set(i * 136 + x * 8 + xx, by + y * 8 + yy, t.p[y][x])
+for y in range(sheet3d.h):
+    for x in range(sheet3d.w):
+        if sheet3d.p[y][x] is None:
+            sheet3d.p[y][x] = hexc('3a4a5a')
+with open(os.path.join(os.path.dirname(OUT_GLYPHS), 'preview3d.png'), 'wb') as f:
+    f.write(png(sheet3d))
 print(f'{len(files)} files, glyphs: {len(glyphs)}')

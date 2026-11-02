@@ -113,18 +113,19 @@ final class Game {
         for (Station s : kitchen.stations) {
             if (s.kind == Station.Kind.PLATES) {
                 s.count = s == kitchen.plates ? PLATES : 0;
-                s.showStack("plate", 0.03);
+                s.showStack("plate", 0.0);
             }
         }
         hovering.clear();
         kitchen.returns.count = 0;
-        kitchen.returns.showStack("dirty_plate", 0.03);
+        kitchen.returns.showStack("dirty_plate", 0.0);
         orders.clear();
         dirtyComing.clear();
         score = served = missed = ticks = 0;
         timeLeft = roundSeconds * 20;
         phase = Phase.COUNTDOWN;
-        for (int i = 0; i < 5; i++) {
+        flashUntil = 0;
+        for (int i = 0; i < MAX_ORDERS; i++) {
             BossBar bar = BossBar.bossBar(Component.empty(), 0f, BossBar.Color.WHITE, BossBar.Overlay.PROGRESS);
             bars.add(bar);
             players.forEach(p -> p.showBossBar(bar));
@@ -135,6 +136,7 @@ final class Game {
     void stop() {
         for (Player p : players) {
             for (BossBar b : bars) p.hideBossBar(b);
+            p.sendActionBar(Component.empty());
             if (p.isOnline()) {
                 p.getInventory().clear();
                 p.setWalkSpeed(0.2f);
@@ -205,7 +207,7 @@ final class Game {
         if (ticks % 2 == 0) tickHover();
         music.tick(players, timeLeft <= 30 * 20);
         if (timeLeft == 30 * 20) {
-            players.forEach(p -> p.sendActionBar(Component.text("30초 남았어요! 서둘러요!", NamedTextColor.RED)));
+            flash("30초 남았어요! 서둘러요!", NamedTextColor.RED);
             playAll(Sound.BLOCK_BELL_USE, 1f, 1.2f);
         }
         if (timeLeft <= 10 * 20 && timeLeft % 20 == 0) playAll(Sound.BLOCK_NOTE_BLOCK_HAT, 1f, 2f);
@@ -221,7 +223,7 @@ final class Game {
                 it.remove();
                 score = Math.max(0, score - 10);
                 missed++;
-                players.forEach(p -> p.sendActionBar(Component.text(o.recipe().name + " 주문을 놓쳤어요… -10", NamedTextColor.RED)));
+                flash(o.recipe().name + " 주문을 놓쳤어요… -10", NamedTextColor.RED);
                 playAll(Sound.ENTITY_ITEM_BREAK, 1f, 0.8f);
             }
         }
@@ -239,7 +241,7 @@ final class Game {
             if (--t[0] <= 0) {
                 it.remove();
                 kitchen.returns.count++;
-                kitchen.returns.showStack("dirty_plate", 0.03);
+                kitchen.returns.showStack("dirty_plate", 0.0);
                 sound(kitchen.returns.top(), Sound.BLOCK_DECORATED_POT_INSERT, 0.8f, 0.8f);
             }
         }
@@ -400,15 +402,15 @@ final class Game {
             case PLATES -> {
                 if (hand == null && s.count > 0) {
                     s.count--;
-                    s.showStack("plate", 0.03);
+                    s.showStack("plate", 0.0);
                     setHand(p, Items.plate(Set.of()));
                     good(p, Sound.BLOCK_DECORATED_POT_INSERT);
                 } else if (hand == null) {
-                    p.sendActionBar(Component.text("깨끗한 접시가 없어요! 설거지를 해 주세요", NamedTextColor.RED));
+                    flash("깨끗한 접시가 없어요! 설거지를 해 주세요", NamedTextColor.RED);
                     bad(p);
                 } else if (Items.isPlate(hand) && Items.contents(hand).isEmpty()) {
                     s.count++;
-                    s.showStack("plate", 0.03);
+                    s.showStack("plate", 0.0);
                     setHand(p, null);
                     good(p, Sound.BLOCK_DECORATED_POT_INSERT);
                 } else bad(p);
@@ -416,12 +418,12 @@ final class Game {
             case RETURN -> {
                 if (hand == null && s.count > 0) {
                     s.count--;
-                    s.showStack("dirty_plate", 0.03);
+                    s.showStack("dirty_plate", 0.0);
                     setHand(p, Items.of("dirty_plate"));
                     good(p, Sound.BLOCK_DECORATED_POT_INSERT);
                 } else if ("dirty_plate".equals(ht)) {
                     s.count++;
-                    s.showStack("dirty_plate", 0.03);
+                    s.showStack("dirty_plate", 0.0);
                     setHand(p, null);
                     good(p, Sound.BLOCK_DECORATED_POT_INSERT);
                 } else bad(p);
@@ -526,7 +528,7 @@ final class Game {
     private void sink(Player p, Station s, ItemStack hand, String ht) {
         if ("dirty_plate".equals(ht)) {
             s.count++;
-            s.showStack("dirty_plate", -0.15);
+            s.showStack("dirty_plate", -0.1);
             setHand(p, null);
             good(p, Sound.ENTITY_GENERIC_SPLASH);
             return;
@@ -544,11 +546,11 @@ final class Game {
         if (s.chop >= WASHES) {
             s.chop = 0;
             s.count--;
-            s.showStack("dirty_plate", -0.15);
+            s.showStack("dirty_plate", -0.1);
             s.hideBar();
             Station rack = kitchen.rackFor(s);
             rack.count++;
-            rack.showStack("plate", 0.03);
+            rack.showStack("plate", 0.0);
             sound(fx, Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1f, 1.5f);
             Location r = rack.top().add(0, 0.3, 0);
             r.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, r, 6, 0.2, 0.1, 0.2, 0);
@@ -633,49 +635,77 @@ final class Game {
                 fx.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, fx, 12, 0.3, 0.3, 0.3, 0);
                 playAll(Sound.ENTITY_PLAYER_LEVELUP, 0.6f, 1.6f);
                 playAll(Sound.BLOCK_NOTE_BLOCK_CHIME, 1f, 1.5f);
-                Component msg = Component.text(o.recipe().name + " 완료! +" + o.recipe().points + "  팁 +" + tip, NamedTextColor.GREEN);
-                players.forEach(x -> x.sendActionBar(msg));
-                updateHud();
+                flash(o.recipe().name + " 완료! +" + o.recipe().points + "  팁 +" + tip, TextColor.color(0x7CFF6A));
                 return;
             }
         }
-        p.sendActionBar(Component.text("주문에 없는 요리예요", NamedTextColor.RED));
+        flash("주문에 없는 요리예요", NamedTextColor.RED);
         bad(p);
     }
 
     // ---------------------------------------------------------------- HUD
 
+    static final TextColor INK = TextColor.color(0x4A3426), INK_SOFT = TextColor.color(0x8A6A50);
+    static final TextColor PIP_OFF = TextColor.color(0xD9C9A8);
+
+    private String flashText = "";
+    private TextColor flashColor = NamedTextColor.WHITE;
+    private int flashUntil;
+
+    /** Short message shown in the middle of the bottom HUD for a couple of seconds. */
+    private void flash(String text, TextColor color) {
+        flashText = text;
+        flashColor = color;
+        flashUntil = ticks + 50;
+        updateHud();
+    }
+
     private void updateHud() {
         if (bars.isEmpty()) return;
-        int secs = Math.max(0, (timeLeft + 19) / 20);
-        TextColor timeColor = secs <= 30 ? NamedTextColor.RED : NamedTextColor.WHITE;
-        int clean = 0;
-        for (Station s : kitchen.stations) if (s.kind == Station.Kind.PLATES) clean += s.count;
-        bars.get(0).name(new Glyphs.Line()
-                .icon("clock").gap(3).text(String.format("%d:%02d", secs / 60, secs % 60), timeColor)
-                .gap(10).icon("coin").gap(3).text(String.valueOf(score), GOLD)
-                .gap(10).icon("plate").gap(3).text(clean + "/" + PLATES, clean == 0 ? NamedTextColor.RED : NamedTextColor.WHITE)
-                .leftAligned(guiWidth));
+        float left = -guiWidth / 2f + 6, right = guiWidth / 2f - 6;
+
+        // Order tickets, top-left: cream cards with the dish, its ingredients and a patience bar.
         for (int i = 0; i < MAX_ORDERS; i++) {
-            BossBar bar = bars.get(i + 1);
+            BossBar bar = bars.get(i);
             if (i >= orders.size()) {
                 bar.name(Component.empty());
                 continue;
             }
             Order o = orders.get(i);
             float frac = o.left()[0] / (float) o.total();
-            TextColor c = frac > 0.5f ? NamedTextColor.GREEN : frac > 0.25f ? NamedTextColor.YELLOW : NamedTextColor.RED;
-            Glyphs.Line line = new Glyphs.Line().icon(o.recipe().icon).gap(3).text(o.recipe().name, NamedTextColor.WHITE).gap(5);
+            TextColor c = frac > 0.5f ? TextColor.color(0x3FA535) : frac > 0.25f ? TextColor.color(0xE0A000) : TextColor.color(0xD8342C);
+            Glyphs.Line line = new Glyphs.Line().icon(o.recipe().icon).gap(3).text(o.recipe().name, INK).gap(5);
             for (String h : o.recipe().hint) {
-                if (h.equals("+")) line.text("+", NamedTextColor.GRAY);
-                else if (h.startsWith("x")) line.text(h, NamedTextColor.GRAY);
-                else line.icon(h).text("(" + Items.name(h) + ")", LABEL);
+                if (h.equals("+")) line.text("+", INK_SOFT);
+                else if (h.startsWith("x")) line.text(h, INK_SOFT);
+                else line.icon(h).text("(" + Items.name(h) + ")", INK_SOFT);
             }
             line.gap(6);
             int pips = 8, full = (int) Math.ceil(frac * pips);
-            for (int k = 0; k < pips; k++) line.icon("pip", k < full ? c : NamedTextColor.DARK_GRAY);
-            bar.name(line.leftAligned(guiWidth));
+            for (int k = 0; k < pips; k++) line.icon("pip", k < full ? c : PIP_OFF);
+            Glyphs.Line card = Glyphs.Line.panel("card", line.width() + 8);
+            bar.name(new Glyphs.Overlay().at(left, card).at(left + 6, line).build());
         }
+
+        // Bottom bar: score and clean plates on the left, big timer on the right, messages in the middle.
+        int secs = Math.max(0, (timeLeft + 19) / 20);
+        int clean = 0;
+        for (Station s : kitchen.stations) if (s.kind == Station.Kind.PLATES) clean += s.count;
+        Glyphs.Line scoreLine = new Glyphs.Line().icon("big_coin").gap(4).digits(String.valueOf(score), GOLD)
+                .gap(10).icon("big_plate").gap(4).digits(String.valueOf(clean), clean == 0 ? TextColor.color(0xFF6A5A) : NamedTextColor.WHITE);
+        Glyphs.Line scorePanel = Glyphs.Line.panel("nav", scoreLine.width() + 10);
+        TextColor timeColor = secs <= 30 && secs % 2 == 0 ? TextColor.color(0xFF6A5A) : NamedTextColor.WHITE;
+        Glyphs.Line timeLine = new Glyphs.Line().icon("big_clock").gap(4).digits(String.format("%d:%02d", secs / 60, secs % 60), timeColor);
+        Glyphs.Line timePanel = Glyphs.Line.panel("nav", timeLine.width() + 10);
+        Glyphs.Overlay bottom = new Glyphs.Overlay()
+                .at(left, scorePanel).at(left + 7, scoreLine)
+                .at(right - timePanel.width(), timePanel).at(right - timePanel.width() + 7, timeLine);
+        if (ticks < flashUntil) {
+            Glyphs.Line msg = new Glyphs.Line().text(flashText, flashColor);
+            bottom.at(-msg.width() / 2, msg);
+        }
+        Component bar = bottom.build();
+        players.forEach(p -> p.sendActionBar(bar));
     }
 
     // ---------------------------------------------------------------- helpers

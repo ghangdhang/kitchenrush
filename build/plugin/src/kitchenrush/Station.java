@@ -50,12 +50,14 @@ final class Station {
         return block.getLocation().add(0.5, 1.0, 0.5);
     }
 
+    /** Height of the surface food rests on, relative to the block top. */
     private float itemHeight() {
         return switch (kind) {
-            case BOARD -> 0.09f;
-            case PAN -> 0.08f;
-            case POT, FRYER -> -0.12f;
-            default -> 0.03f;
+            case BOARD -> 0.065f;
+            case PAN -> 0.06f;
+            case FRYER -> -0.1f;
+            case POT -> -0.08f;
+            default -> 0.0f;
         };
     }
 
@@ -80,7 +82,7 @@ final class Station {
             return;
         }
         if (itemDisplay == null || !itemDisplay.isValid()) {
-            itemDisplay = flatItem(top().add(0, itemHeight(), 0), shown, kind == Kind.POT ? 0.8f : 0.6f);
+            itemDisplay = restItem(top().add(0, itemHeight(), 0), shown, kind == Kind.POT ? 0.8f : 0.65f);
         } else {
             itemDisplay.setItemStack(shown);
         }
@@ -91,19 +93,22 @@ final class Station {
         while (stack.size() > count) stack.remove(stack.size() - 1).remove();
         while (stack.size() < count) {
             ItemStack it = type.equals("plate") ? Items.plate(java.util.Set.of()) : Items.of(type);
-            stack.add(flatItem(top().add(0, base + stack.size() * 0.05, 0), it, 0.6f));
+            stack.add(restItem(top().add(0, base + stack.size() * 0.045, 0), it, 0.65f));
         }
     }
 
-    ItemDisplay flatItem(Location loc, ItemStack stack, float scale) {
+    /**
+     * Spawns a 3D item model resting on the given surface point. The models' bottoms sit at model y=0,
+     * which an item display draws half its scale below the entity, so the entity is lifted by that much.
+     */
+    ItemDisplay restItem(Location surface, ItemStack stack, float scale) {
+        Location loc = surface.clone().add(0, 0.5 * scale, 0);
         return loc.getWorld().spawn(loc, ItemDisplay.class, d -> {
             d.setItemStack(stack);
             d.setPersistent(false);
             d.addScoreboardTag(TAG);
-            d.setBrightness(new Display.Brightness(15, 15));
             d.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.FIXED);
-            d.setTransformation(new Transformation(new Vector3f(),
-                    new AxisAngle4f((float) (-Math.PI / 2), 1, 0, 0),
+            d.setTransformation(new Transformation(new Vector3f(), new AxisAngle4f(),
                     new Vector3f(scale, scale, scale), new AxisAngle4f()));
         });
     }
