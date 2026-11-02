@@ -4,6 +4,8 @@
 !/build/
 !/KitchenServer/
 
+/build/.venv/
+/build/audio/
 /build/out/
 /build/KitchenRush.jar
 /build/plugin/resources/kitchen-pack.zip

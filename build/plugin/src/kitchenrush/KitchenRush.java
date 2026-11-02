@@ -39,6 +39,7 @@ public final class KitchenRush extends JavaPlugin implements Listener {
         try {
             Items.init(this);
             Glyphs.load(this);
+            Music.load(this);
         } catch (Exception e) {
             getLogger().severe("Failed to start: " + e);
             Bukkit.getPluginManager().disablePlugin(this);

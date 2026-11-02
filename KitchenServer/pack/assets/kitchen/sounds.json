@@ -1,0 +1,42 @@
+{
+ "music.bgm": {
+  "sounds": [
+   {
+    "name": "kitchen:music/bgm",
+    "stream": true
+   }
+  ]
+ },
+ "music.bgm_hurry": {
+  "sounds": [
+   {
+    "name": "kitchen:music/bgm_hurry",
+    "stream": true
+   }
+  ]
+ },
+ "sfx.clear": {
+  "sounds": [
+   {
+    "name": "kitchen:sfx/clear",
+    "stream": false
+   }
+  ]
+ },
+ "sfx.fail": {
+  "sounds": [
+   {
+    "name": "kitchen:sfx/fail",
+    "stream": false
+   }
+  ]
+ },
+ "sfx.start": {
+  "sounds": [
+   {
+    "name": "kitchen:sfx/start",
+    "stream": false
+   }
+  ]
+ }
+}

@@ -1,60 +1,66 @@
 package kitchenrush;
 
-import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 
-/** An original, bouncy note-block loop (C major, 8 bars of eighth notes). */
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Background music from the resource pack (original tracks made by build/gen_audio.py).
+ * Minecraft sounds don't loop, so each track is replayed when it ends; the loops are whole ticks long.
+ */
 final class Music {
-    // Note-block pitch steps: 6 = C, 8 = D, 10 = E, 11 = F, 13 = G, 15 = A, 17 = B, 18 = high C ... -1 = rest.
-    private static final int[] MELODY = {
-            10, 13, 18, 13, 15, 13, 10, -1,
-            11, 15, 20, 15, 13, 11, 10, 8,
-            10, 13, 18, 22, 20, 18, 15, 13,
-            11, 10, 8, 10, 6, -1, -1, -1,
-            15, 15, 13, 15, 18, -1, 15, 13,
-            11, 11, 10, 11, 15, -1, 13, 11,
-            10, 13, 18, 20, 22, 20, 18, 15,
-            13, -1, 20, -1, 18, -1, -1, -1,
-    };
-    // Root and fifth for each bar: C, F, C, G, Am, F, C, G->C
-    private static final int[][] BASS = {{6, 13}, {11, 18}, {6, 13}, {13, 20}, {15, 22}, {11, 18}, {6, 13}, {13, 6}};
+    static final String BGM = "kitchen:music.bgm", HURRY = "kitchen:music.bgm_hurry";
 
-    private boolean playing;
-    private int step, wait;
+    private static final Map<String, Integer> LENGTHS = new HashMap<>();
+
+    private boolean playing, hurry;
+    private int t;
+
+    static void load(Plugin plugin) throws IOException {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(
+                plugin.getResource("audio.txt"), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = in.readLine()) != null) {
+                String[] p = line.trim().split(" ");
+                if (p.length == 2) LENGTHS.put(p[0], Integer.parseInt(p[1]));
+            }
+        }
+    }
 
     void start() {
         playing = true;
-        step = 0;
-        wait = 0;
+        hurry = false;
+        t = 0;
     }
 
-    void stop() {
+    void stop(List<Player> listeners) {
         playing = false;
-    }
-
-    void tick(java.util.List<Player> listeners, boolean hurry) {
-        if (!playing || listeners.isEmpty()) return;
-        var p = listeners;
-        if (++wait < (hurry ? 3 : 4)) return;
-        wait = 0;
-        int bar = step / 8, beat = step % 8;
-        int note = MELODY[step];
-        if (note >= 0) {
-            play(p, Sound.BLOCK_NOTE_BLOCK_FLUTE, 0.55f, note);
-            if (beat % 2 == 0) play(p, Sound.BLOCK_NOTE_BLOCK_XYLOPHONE, 0.18f, note);
+        for (Player p : listeners) {
+            p.stopSound(BGM, SoundCategory.RECORDS);
+            p.stopSound(HURRY, SoundCategory.RECORDS);
         }
-        if (beat == 0) play(p, Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, BASS[bar][0]);
-        if (beat == 4) play(p, Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, bar == 7 ? BASS[bar][1] : BASS[bar][0]);
-        if (beat == 2 || beat == 6) play(p, Sound.BLOCK_NOTE_BLOCK_BASS, 0.6f, bar == 7 ? BASS[bar][0] : BASS[bar][1]);
-        if (beat == 0 || beat == 4) play(p, Sound.BLOCK_NOTE_BLOCK_BASEDRUM, 0.45f, 12);
-        if (beat == 2 || beat == 6) play(p, Sound.BLOCK_NOTE_BLOCK_SNARE, 0.35f, 12);
-        if (beat % 2 == 1) play(p, Sound.BLOCK_NOTE_BLOCK_HAT, 0.22f, 16);
-        step = (step + 1) % MELODY.length;
     }
 
-    private static void play(java.util.List<Player> listeners, Sound s, float vol, int note) {
-        float pitch = (float) Math.pow(2, (note - 12) / 12.0);
-        for (Player p : listeners) p.playSound(p, s, SoundCategory.RECORDS, vol, pitch);
+    void tick(List<Player> listeners, boolean hurryNow) {
+        if (!playing || listeners.isEmpty()) return;
+        if (hurryNow && !hurry) {
+            for (Player p : listeners) p.stopSound(BGM, SoundCategory.RECORDS);
+            hurry = true;
+            t = 0;
+        }
+        if (t == 0) {
+            String track = hurry ? HURRY : BGM;
+            for (Player p : listeners) p.playSound(p, track, SoundCategory.RECORDS, 0.7f, 1f);
+        }
+        int length = LENGTHS.getOrDefault(hurry ? "bgm_hurry" : "bgm", 576);
+        if (++t >= length) t = 0;
     }
 }

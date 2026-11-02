@@ -265,6 +265,12 @@ def draw(name):
         fries(c, 10, 10.5, small=True)
         c.dots([(7, 11), (8, 11)], GREEN)
         c.dots([(8, 8)], RED)
+    elif name == 'plate_cover':
+        for x in (2, 13):
+            c.rect(x, 4, x, 13, hexc('8f9aa3'))
+        for y in (4, 9, 13):
+            c.rect(2, y, 13, y, hexc('c9d1d8'))
+        c.rect(7, 2, 8, 3, hexc('eef2f5'))
     elif name == 'soup':
         c.ellipse(8, 8, 7, 7, SOUP)
         c.dots([(5, 6), (6, 5), (7, 5), (10, 9), (11, 10), (9, 11), (6, 10)], SOUP_L)
@@ -291,7 +297,8 @@ def draw(name):
 ITEMS = ['tomato', 'tomato_chopped', 'lettuce', 'lettuce_chopped', 'meat', 'patty_raw', 'patty_cooked',
          'burnt', 'bread', 'plate', 'plate_salad', 'plate_mixsalad', 'plate_bread', 'plate_patty', 'plate_burger',
          'pan', 'fish', 'fish_chopped', 'fish_fried', 'potato', 'potato_chopped', 'fries', 'dirty_plate',
-         'plate_tomato', 'plate_fish', 'plate_fries', 'plate_fishfries', 'plate_special', 'plate_fishset']
+         'plate_tomato', 'plate_fish', 'plate_fries', 'plate_fishfries', 'plate_special', 'plate_fishset',
+         'plate_cover']
 ICONS_ONLY = ['clock', 'coin']
 
 # ---------------------------------------------------------------- 3D models
@@ -317,7 +324,8 @@ for _n, _h in [('red', 'e8402a'), ('red_d', 'b52a1b'), ('red_l', 'ff8a6a'), ('pi
                ('plate', 'f7f7f4'), ('plate_in', 'e2e8ec'), ('plate_rim', 'd2d8dc'),
                ('soup', 'e2572f'), ('soup_l', 'ff9466'), ('dirt', '8a6a3a'), ('dirt_l', 'b09060'),
                ('char', '2a2a2a'), ('char_l', '4a4a4a'), ('smoke', 'a8a8a8'), ('pan', '3b3f45'), ('pan_in', '575d66'),
-               ('handle', '7a5230'), ('black', '1a1a1a'), ('white', 'ffffff')]:
+               ('handle', '7a5230'), ('black', '1a1a1a'), ('white', 'ffffff'),
+               ('steel', 'c9d1d8'), ('steel_d', '8f9aa3'), ('steel_l', 'eef2f5')]:
     pal(_n, _h)
 
 
@@ -532,7 +540,26 @@ def m_meat(m, t):
     m.box(t, 5.8, 0.4, -1.1, 6.8, 1.6, 1.1, 'bone')
 
 
+def m_plate_cover(m, t):
+    """Wire cage over the plate pile: shows plates here are only for taking, not for assembling dishes."""
+    r, h, w = 7.2, 6.5, 0.45
+    for x in (-r, r - w):
+        for z in (-r, r - w):
+            m.box(t, x, 0, z, x + w, h, z + w, 'steel_d')
+    for y in (h - w, 2.8):
+        col = 'steel' if y > 3 else 'steel_d'
+        m.box(t, -r, y, -r, r, y + w, -r + w, col)
+        m.box(t, -r, y, r - w, r, y + w, r, col)
+        m.box(t, -r, y, -r, -r + w, y + w, r, col)
+        m.box(t, r - w, y, -r, r, y + w, r, col)
+    for k in (-3.6, 0, 3.6):
+        m.box(t, k - w / 2, h - w, -r, k + w / 2, h, r, 'steel')
+        m.box(t, -r, h - w, k - w / 2, r, h, k + w / 2, 'steel')
+    m.box(t, -1.2, h, -1.2, 1.2, h + 0.9, 1.2, 'steel_l')
+
+
 FOOD_3D = {
+    'plate_cover': lambda m: m_plate_cover(m, T()),
     'tomato': lambda m: m_tomato(m, T()),
     'tomato_chopped': lambda m: m_tomato_slices(m, T()),
     'lettuce': lambda m: m_lettuce(m, T()),
@@ -818,6 +845,23 @@ def tex_board():
     return c
 
 
+def tex_plate_station():
+    """Pale blue tiled dish cabinet with a white plate emblem (smooth quartz)."""
+    c = Canvas()
+    noise_fill(c, hexc('cfe3ee'), 3, 81)
+    frame(c, hexc('7f9fb2'))
+    for x in range(1, 15):
+        c.set(x, 1, hexc('eaf4fa'))
+    c.ellipse(8, 8.5, 5, 5, hexc('ffffff'))
+    c.ellipse(8, 8.5, 3.2, 3.2, hexc('e2ecf2'))
+    for y in range(16):
+        for x in range(16):
+            r = ((x + 0.5 - 8) ** 2 + (y + 0.5 - 8.5) ** 2) ** 0.5
+            if 4.6 < r <= 5.4 and c.p[y][x] != hexc('ffffff'):
+                c.set(x, y, hexc('9ab4c4'))
+    return c
+
+
 def tex_cauldron_side():
     c = Canvas()
     brushed(c, STEEL, 61)
@@ -905,6 +949,8 @@ BLOCK_TEXTURES = {
     'composter_bottom': tex_bin_bottom,
     # chopping board (birch pressure plate uses birch planks)
     'birch_planks': tex_board,
+    # plate stand and drying rack (smooth quartz uses quartz_block_bottom on every face)
+    'quartz_block_bottom': tex_plate_station,
     # fryer and sink (cauldrons): stainless steel
     'cauldron_side': tex_cauldron_side,
     'cauldron_top': tex_cauldron_top,
@@ -1048,6 +1094,23 @@ for block, (fn, frametime) in ANIMATED_TEXTURES.items():
     files[f'assets/minecraft/textures/block/{block}.png.mcmeta'] = json.dumps({'animation': {'frametime': frametime}})
 
 files['assets/kitchen/font/icons.json'] = json.dumps({'providers': providers}, ensure_ascii=True, indent=1)
+
+# Original music and jingles made by gen_audio.py (run first by build.ps1).
+AUDIO_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'audio')
+sound_events = {}
+for folder, event_prefix, stream in (('music', 'music', True), ('sfx', 'sfx', False)):
+    d = os.path.join(AUDIO_DIR, folder)
+    if not os.path.isdir(d):
+        continue
+    for fn in sorted(os.listdir(d)):
+        if fn.endswith('.ogg'):
+            name = fn[:-4]
+            with open(os.path.join(d, fn), 'rb') as fh:
+                files[f'assets/kitchen/sounds/{folder}/{fn}'] = fh.read()
+            sound_events[f'{event_prefix}.{name}'] = {
+                'sounds': [{'name': f'kitchen:{folder}/{name}', 'stream': stream}]}
+if sound_events:
+    files['assets/kitchen/sounds.json'] = json.dumps(sound_events, indent=1)
 
 advances = {}
 for bit in range(11):

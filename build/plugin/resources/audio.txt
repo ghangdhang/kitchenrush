@@ -1,0 +1,5 @@
+bgm 576
+bgm_hurry 480
+start 33
+clear 51
+fail 43

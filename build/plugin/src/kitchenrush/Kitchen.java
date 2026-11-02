@@ -48,6 +48,7 @@ final class Kitchen {
     };
     /** Counters use sandstone, retextured by the pack as a wooden worktop over cabinet doors. */
     static final Material COUNTER = Material.SANDSTONE;
+    static final Material PLATE_STAND = Material.SMOOTH_QUARTZ;
 
     final String name;
     final World world;
@@ -156,16 +157,13 @@ final class Kitchen {
                 b.setType(COUNTER, false);
                 add(new Station(Station.Kind.COUNTER, b, null));
             }
-            case 'D' -> {
-                b.setType(COUNTER, false);
+            case 'D', 'Q' -> {
+                // Plate cabinet (retextured smooth quartz) with a wire cover: plates are taken here, not assembled.
+                b.setType(PLATE_STAND, false);
                 s = add(new Station(Station.Kind.PLATES, b, null));
-                s.label("접시", 1.0, 0.5f);
-                plates = s;
-            }
-            case 'Q' -> {
-                b.setBlockData(Bukkit.createBlockData("minecraft:spruce_slab[type=double]"), false);
-                s = add(new Station(Station.Kind.PLATES, b, null));
-                s.label("건조대", 1.0, 0.5f);
+                s.addExtra(s.restItem(s.top(), Items.of("plate_cover"), 0.65f));
+                s.label(c == 'D' ? "접시" : "건조대", 1.0, 0.5f);
+                if (c == 'D') plates = s;
             }
             case 'U' -> {
                 b.setType(Material.SPRUCE_PLANKS, false);

@@ -150,8 +150,8 @@ final class Game {
             if (h != null && h.hoverIfPresent() != null) p.hideEntity(plugin, h.hoverIfPresent());
         }
         hovering.clear();
+        music.stop(players);
         players.clear();
-        music.stop();
         orders.clear();
         dirtyComing.clear();
         phase = Phase.IDLE;
@@ -169,8 +169,9 @@ final class Game {
             p.sendMessage(Component.text("── 오늘의 영업 결과 (" + mode.label + ") ──", NamedTextColor.GOLD));
             p.sendMessage(Component.text(" 점수: " + score + "   서빙: " + served + "   놓친 주문: " + missed, NamedTextColor.WHITE));
             p.sendMessage(Component.text(" 별 기준: ★" + mode.stars[0] + " / ★★" + mode.stars[1] + " / ★★★" + mode.stars[2], NamedTextColor.GRAY));
-            p.playSound(p, stars > 0 ? Sound.UI_TOAST_CHALLENGE_COMPLETE : Sound.ENTITY_VILLAGER_NO, SoundCategory.MASTER, 1f, 1f);
         }
+        music.stop(players);
+        Jingle.play(players, stars > 0 ? Jingle.CLEAR : Jingle.FAIL);
         stop();
     }
 
@@ -193,7 +194,7 @@ final class Game {
             }
             if (ticks > 60) {
                 title(Component.text("영업 시작!", GOLD), Component.empty());
-                playAll(Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 2f);
+                Jingle.play(players, Jingle.START);
                 phase = Phase.RUNNING;
                 spawnOrder();
                 spawnOrder();

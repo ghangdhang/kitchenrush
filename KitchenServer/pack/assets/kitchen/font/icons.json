@@ -263,7 +263,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kitchen:font/clock.png",
+   "file": "kitchen:item/plate_cover.png",
    "height": 9,
    "ascent": 8,
    "chars": [
@@ -272,7 +272,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kitchen:font/coin.png",
+   "file": "kitchen:font/clock.png",
    "height": 9,
    "ascent": 8,
    "chars": [
@@ -281,11 +281,20 @@
   },
   {
    "type": "bitmap",
+   "file": "kitchen:font/coin.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue01f"
+   ]
+  },
+  {
+   "type": "bitmap",
    "file": "kitchen:font/pip.png",
    "height": 7,
    "ascent": 7,
    "chars": [
-    "\ue01f"
+    "\ue020"
    ]
   },
   {
@@ -294,7 +303,7 @@
    "height": 16,
    "ascent": 12,
    "chars": [
-    "\ue020"
+    "\ue021"
    ]
   },
   {
@@ -303,7 +312,7 @@
    "height": 16,
    "ascent": 12,
    "chars": [
-    "\ue021"
+    "\ue022"
    ]
   },
   {
@@ -312,7 +321,7 @@
    "height": 16,
    "ascent": 12,
    "chars": [
-    "\ue022"
+    "\ue023"
    ]
   },
   {
@@ -321,7 +330,7 @@
    "height": 22,
    "ascent": 17,
    "chars": [
-    "\ue023"
+    "\ue024"
    ]
   },
   {
@@ -330,7 +339,7 @@
    "height": 22,
    "ascent": 17,
    "chars": [
-    "\ue024"
+    "\ue025"
    ]
   },
   {
@@ -339,7 +348,7 @@
    "height": 22,
    "ascent": 17,
    "chars": [
-    "\ue025"
+    "\ue026"
    ]
   },
   {
@@ -348,7 +357,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue026"
+    "\ue027"
    ]
   },
   {
@@ -357,7 +366,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue027"
+    "\ue028"
    ]
   },
   {
@@ -366,7 +375,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue028"
+    "\ue029"
    ]
   },
   {
@@ -375,7 +384,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue029"
+    "\ue02a"
    ]
   },
   {
@@ -384,7 +393,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue02a"
+    "\ue02b"
    ]
   },
   {
@@ -393,7 +402,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue02b"
+    "\ue02c"
    ]
   },
   {
@@ -402,7 +411,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue02c"
+    "\ue02d"
    ]
   },
   {
@@ -411,7 +420,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue02d"
+    "\ue02e"
    ]
   },
   {
@@ -420,7 +429,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue02e"
+    "\ue02f"
    ]
   },
   {
@@ -429,7 +438,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue02f"
+    "\ue030"
    ]
   },
   {
@@ -438,7 +447,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue030"
+    "\ue031"
    ]
   },
   {
@@ -447,7 +456,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue031"
+    "\ue032"
    ]
   },
   {
@@ -456,7 +465,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue032"
+    "\ue033"
    ]
   },
   {
@@ -465,7 +474,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue033"
+    "\ue034"
    ]
   }
  ]
