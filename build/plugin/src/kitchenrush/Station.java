@@ -34,7 +34,8 @@ final class Station {
     boolean soupDone, burnt;
 
     private ItemDisplay itemDisplay;
-    private TextDisplay bar;
+    private TextDisplay bar, hover;
+    private String hoverText = "";
     private final List<Entity> extras = new ArrayList<>();
     private final List<ItemDisplay> stack = new ArrayList<>();
 
@@ -147,6 +148,42 @@ final class Station {
                 .build());
     }
 
+    /** Info label shown only to players looking at this station (hidden by default). */
+    TextDisplay hoverLabel() {
+        if (hover == null || !hover.isValid()) {
+            hover = block.getWorld().spawn(top().add(0, 1.35, 0), TextDisplay.class, d -> {
+                d.setVisibleByDefault(false);
+                d.setBillboard(Display.Billboard.CENTER);
+                d.setBackgroundColor(Color.fromARGB(190, 15, 15, 25));
+                d.setShadowed(true);
+                d.setBrightness(new Display.Brightness(15, 15));
+                d.setLineWidth(260);
+                d.setPersistent(false);
+                d.addScoreboardTag(TAG);
+                d.setTransformation(new Transformation(new Vector3f(), new AxisAngle4f(),
+                        new Vector3f(0.55f, 0.55f, 0.55f), new AxisAngle4f()));
+            });
+            hoverText = "";
+        }
+        return hover;
+    }
+
+    TextDisplay hoverIfPresent() {
+        return hover != null && hover.isValid() ? hover : null;
+    }
+
+    void setHoverText(java.util.List<String> lines) {
+        String joined = String.join("\n", lines);
+        if (joined.equals(hoverText)) return;
+        hoverText = joined;
+        var b = Component.text();
+        for (int i = 0; i < lines.size(); i++) {
+            if (i > 0) b.append(Component.newline());
+            b.append(Component.text(lines.get(i), i == 0 ? NamedTextColor.YELLOW : NamedTextColor.WHITE));
+        }
+        hoverLabel().text(b.build());
+    }
+
     void hideBar() {
         if (bar != null) bar.remove();
         bar = null;
@@ -163,6 +200,8 @@ final class Station {
 
     void removeVisuals() {
         if (itemDisplay != null) itemDisplay.remove();
+        if (hover != null) hover.remove();
+        hover = null;
         hideBar();
         extras.forEach(Entity::remove);
         extras.clear();

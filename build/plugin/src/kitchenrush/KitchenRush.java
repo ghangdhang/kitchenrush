@@ -48,7 +48,7 @@ public final class KitchenRush extends JavaPlugin implements Listener {
         world = Bukkit.getWorlds().get(0);
         solo = new Kitchen("1인 주방", world, Kitchen.SOLO, 0, 100, 0, new double[][]{{6.5, 6.5}});
         duo = new Kitchen("2인 주방", world, Kitchen.DUO, 100, 100, 0, new double[][]{{4.5, 5.5}, {13.5, 5.5}});
-        game = new Game();
+        game = new Game(this);
         game.roundSeconds = getConfig().getInt("round-seconds", 180);
         game.guiWidth = getConfig().getInt("hud-gui-width", 480);
         Kitchen.prepareWorld(world, solo.spawns.get(0));

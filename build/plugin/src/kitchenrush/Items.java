@@ -48,12 +48,12 @@ final class Items {
     static final Map<String, String> NAMES = Map.ofEntries(
             Map.entry("lettuce", "양상추"), Map.entry("lettuce_chopped", "썬 양상추"),
             Map.entry("tomato", "토마토"), Map.entry("tomato_chopped", "썬 토마토"),
-            Map.entry("meat", "고기"), Map.entry("patty_raw", "생 패티"),
-            Map.entry("patty_cooked", "구운 패티"), Map.entry("bread", "빵"),
-            Map.entry("fish", "생선"), Map.entry("fish_chopped", "손질한 생선"), Map.entry("fish_fried", "생선튀김"),
-            Map.entry("potato", "감자"), Map.entry("potato_chopped", "썬 감자"), Map.entry("fries", "감자튀김"),
+            Map.entry("meat", "고기"), Map.entry("patty_raw", "다진 고기"),
+            Map.entry("patty_cooked", "구운 다진 고기"), Map.entry("bread", "빵"),
+            Map.entry("fish", "생선"), Map.entry("fish_chopped", "다진 생선"), Map.entry("fish_fried", "튀긴 다진 생선"),
+            Map.entry("potato", "감자"), Map.entry("potato_chopped", "썬 감자"), Map.entry("fries", "튀긴 썬 감자"),
             Map.entry("burnt", "탄 음식"), Map.entry("plate", "접시"), Map.entry("dirty_plate", "더러운 접시"),
-            Map.entry("soup", "수프"), Map.entry("pan", "프라이팬"));
+            Map.entry("soup", "끓인 토마토 수프"), Map.entry("pan", "프라이팬"));
 
     static final Map<String, String> CHOPS = Map.of(
             "lettuce", "lettuce_chopped", "tomato", "tomato_chopped", "meat", "patty_raw",
@@ -154,6 +154,29 @@ final class Items {
 
     static String name(String type) {
         return NAMES.getOrDefault(type, type);
+    }
+
+    /** Hover text for a plate: what's on it and which dishes it can still become. */
+    static List<String> describePlate(Set<String> contents) {
+        List<String> lines = new java.util.ArrayList<>();
+        if (contents.isEmpty()) {
+            lines.add("빈 접시");
+            return lines;
+        }
+        lines.add("접시: " + String.join(" + ", contents.stream().map(Items::name).toList()));
+        for (Recipe r : Recipe.values()) {
+            if (r.contents.equals(contents)) {
+                lines.add("✔ " + r.name + " 완성! 서빙대로");
+                return lines;
+            }
+        }
+        for (Recipe r : Recipe.values()) {
+            if (r.contents.containsAll(contents)) {
+                List<String> missing = r.contents.stream().filter(x -> !contents.contains(x)).map(Items::name).sorted().toList();
+                lines.add("→ " + r.name + ": " + String.join(", ", missing) + " 필요");
+            }
+        }
+        return lines;
     }
 
     private Items() {

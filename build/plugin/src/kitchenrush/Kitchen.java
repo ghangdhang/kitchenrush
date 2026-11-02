@@ -19,7 +19,7 @@ final class Kitchen {
     /*
      * Top-down layouts (north at the top). One character per block.
      *   C counter   B chopping board   L/T/M/R/F/O lettuce/tomato/meat/bread/fish/potato crates
-     *   P stove with pan   Y fryer   K pot   D clean plates   U dirty plate return   W sink
+     *   P stove with pan   Y fryer   K pot   D clean plates   U dirty plate return   W sink   Q drying rack
      *   S serving hatch   X bin   . floor
      */
     static final String[] SOLO = {
@@ -30,7 +30,7 @@ final class Kitchen {
             "C...CCCCC...S",
             "C...........C",
             "X...........W",
-            "C...........C",
+            "C...........Q",
             "CCCCCBCCCCCCC",
     };
     /** Two-player kitchen: the middle counter splits prep (west) from cooking and serving (east). */
@@ -42,7 +42,7 @@ final class Kitchen {
             "B........C........S",
             "C........C........C",
             "W........C........D",
-            "W........C........U",
+            "Q........C........U",
             "X........C........X",
             "C........C........C",
             "CCCCCCCCCCCCCCCCCCC",
@@ -87,6 +87,16 @@ final class Kitchen {
         world.setStorm(false);
         world.setThundering(false);
         world.setSpawnLocation(spawn);
+    }
+
+    /** The drying rack next to a sink, where its washed plates appear. */
+    Station rackFor(Station sink) {
+        Block b = sink.block;
+        for (int[] d : new int[][]{{1, 0}, {-1, 0}, {0, 1}, {0, -1}}) {
+            Station s = at(b.getRelative(d[0], 0, d[1]));
+            if (s != null && s.kind == Station.Kind.PLATES) return s;
+        }
+        return plates;
     }
 
     Station at(Block b) {
@@ -167,6 +177,11 @@ final class Kitchen {
                 s = add(new Station(Station.Kind.PLATES, b, null));
                 s.label("접시", 1.0, 0.5f);
                 plates = s;
+            }
+            case 'Q' -> {
+                b.setBlockData(Bukkit.createBlockData("minecraft:spruce_slab[type=double]"), false);
+                s = add(new Station(Station.Kind.PLATES, b, null));
+                s.label("건조대", 1.0, 0.5f);
             }
             case 'U' -> {
                 b.setType(Material.SPRUCE_PLANKS, false);

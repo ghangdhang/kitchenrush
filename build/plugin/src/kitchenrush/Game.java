@@ -47,6 +47,7 @@ final class Game {
     static final int MAX_ORDERS = 4, CHOPS = 6, WASHES = 6, PLATES = 3, DIRTY_DELAY = 7 * 20;
     static final int PAN_COOK = 120, PAN_BURN = 200, FRY_COOK = 140, FRY_BURN = 220, POT_COOK = 200, POT_BURN = 260;
     static final TextColor GOLD = TextColor.color(0xFFD84A);
+    static final TextColor LABEL = TextColor.color(0xD8E4EC);
 
     record Order(Items.Recipe recipe, int total, int[] left) {
     }
@@ -58,12 +59,18 @@ final class Game {
     private final List<int[]> dirtyComing = new ArrayList<>();
     private final Map<UUID, Integer> lastHit = new HashMap<>();
     private final List<Player> players = new ArrayList<>();
+    private final Map<UUID, Station> hovering = new HashMap<>();
+    private final org.bukkit.plugin.Plugin plugin;
 
     private Phase phase = Phase.IDLE;
     private Mode mode = Mode.SOLO;
     private Kitchen kitchen;
     private int ticks, timeLeft, score, served, missed, nextOrder;
     int roundSeconds = 180, guiWidth = 480;
+
+    Game(org.bukkit.plugin.Plugin plugin) {
+        this.plugin = plugin;
+    }
 
     boolean running() {
         return phase == Phase.RUNNING;
@@ -103,8 +110,13 @@ final class Game {
             if (hp != null) p.setHealth(hp.getValue());
             p.setWalkSpeed(0.24f);
         }
-        kitchen.plates.count = PLATES;
-        kitchen.plates.showStack("plate", 0.03);
+        for (Station s : kitchen.stations) {
+            if (s.kind == Station.Kind.PLATES) {
+                s.count = s == kitchen.plates ? PLATES : 0;
+                s.showStack("plate", 0.03);
+            }
+        }
+        hovering.clear();
         kitchen.returns.count = 0;
         kitchen.returns.showStack("dirty_plate", 0.03);
         orders.clear();
@@ -129,6 +141,11 @@ final class Game {
             }
         }
         bars.clear();
+        for (Player p : players) {
+            Station h = hovering.get(p.getUniqueId());
+            if (h != null && h.hoverIfPresent() != null) p.hideEntity(plugin, h.hoverIfPresent());
+        }
+        hovering.clear();
         players.clear();
         music.stop();
         orders.clear();
@@ -185,6 +202,7 @@ final class Game {
         for (Station s : kitchen.stations) tickStation(s);
         tickOrders();
         tickDishes();
+        if (ticks % 2 == 0) tickHover();
         music.tick(players, timeLeft <= 30 * 20);
         if (timeLeft == 30 * 20) {
             players.forEach(p -> p.sendActionBar(Component.text("30초 남았어요! 서둘러요!", NamedTextColor.RED)));
@@ -223,6 +241,69 @@ final class Game {
                 kitchen.returns.count++;
                 kitchen.returns.showStack("dirty_plate", 0.03);
                 sound(kitchen.returns.top(), Sound.BLOCK_DECORATED_POT_INSERT, 0.8f, 0.8f);
+            }
+        }
+    }
+
+    /** Shows each cook an info label over the station under their crosshair. */
+    private void tickHover() {
+        for (Player p : players) {
+            org.bukkit.block.Block b = p.getTargetBlockExact(5);
+            Station s = b == null ? null : kitchen.at(b);
+            List<String> info = s == null ? null : describe(s);
+            if (info == null) s = null;
+            Station old = hovering.get(p.getUniqueId());
+            if (old != s) {
+                if (old != null && old.hoverIfPresent() != null) p.hideEntity(plugin, old.hoverIfPresent());
+                if (s != null) {
+                    s.setHoverText(info);
+                    p.showEntity(plugin, s.hoverLabel());
+                    hovering.put(p.getUniqueId(), s);
+                } else {
+                    hovering.remove(p.getUniqueId());
+                }
+            } else if (s != null) {
+                s.setHoverText(info);
+            }
+        }
+    }
+
+    private List<String> describe(Station s) {
+        switch (s.kind) {
+            case PLATES -> {
+                return List.of((s == kitchen.plates ? "접시대" : "건조대") + ": 깨끗한 접시 " + s.count + "개");
+            }
+            case RETURN -> {
+                return List.of("반납대: 더러운 접시 " + s.count + "개", "싱크대로 가져가 설거지하세요");
+            }
+            case SINK -> {
+                return s.count == 0 ? List.of("싱크대", "더러운 접시를 넣고 꾹 눌러 설거지")
+                        : List.of("싱크대: 설거지할 접시 " + s.count + "개", "빈손으로 꾹 눌러 설거지");
+            }
+            case CRATE -> {
+                return List.of(Items.name(s.crate) + " 상자");
+            }
+            case POT -> {
+                if (s.burnt) return List.of("냄비: 탄 음식", "빈손으로 꺼내서 버리세요");
+                if (s.soupDone) return List.of("냄비: " + Items.name("soup") + " 완성!", "접시를 들고 담으세요");
+                if (s.tomatoes == 0) return null;
+                return List.of("냄비: 썬 토마토 " + s.tomatoes + "/3", s.tomatoes < 3 ? "썬 토마토를 더 넣으세요" : "끓는 중…");
+            }
+            case COUNTER, BOARD, PAN, FRYER -> {
+                if (s.item == null) return null;
+                if (Items.isPlate(s.item)) return Items.describePlate(Items.contents(s.item));
+                String t = Items.type(s.item);
+                List<String> lines = new ArrayList<>();
+                lines.add(Items.name(t));
+                if (Items.CHOPS.containsKey(t)) lines.add("→ 도마에서 썰면: " + Items.name(Items.CHOPS.get(t)));
+                else if ("patty_raw".equals(t)) lines.add("→ 프라이팬에 구우면: " + Items.name("patty_cooked"));
+                else if (Items.FRIES.containsKey(t)) lines.add("→ 튀김기에 넣으면: " + Items.name(Items.FRIES.get(t)));
+                else if ("burnt".equals(t)) lines.add("쓰레기통에 버리세요");
+                else if ("dirty_plate".equals(t)) lines.add("싱크대에서 설거지하세요");
+                return lines;
+            }
+            default -> {
+                return null;
             }
         }
     }
@@ -465,9 +546,12 @@ final class Game {
             s.count--;
             s.showStack("dirty_plate", -0.15);
             s.hideBar();
-            kitchen.plates.count++;
-            kitchen.plates.showStack("plate", 0.03);
+            Station rack = kitchen.rackFor(s);
+            rack.count++;
+            rack.showStack("plate", 0.03);
             sound(fx, Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1f, 1.5f);
+            Location r = rack.top().add(0, 0.3, 0);
+            r.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, r, 6, 0.2, 0.1, 0.2, 0);
         } else {
             s.showBar(s.chop / (float) WASHES, NamedTextColor.AQUA, "");
         }
@@ -565,7 +649,8 @@ final class Game {
         if (bars.isEmpty()) return;
         int secs = Math.max(0, (timeLeft + 19) / 20);
         TextColor timeColor = secs <= 30 ? NamedTextColor.RED : NamedTextColor.WHITE;
-        int clean = kitchen.plates == null ? 0 : kitchen.plates.count;
+        int clean = 0;
+        for (Station s : kitchen.stations) if (s.kind == Station.Kind.PLATES) clean += s.count;
         bars.get(0).name(new Glyphs.Line()
                 .icon("clock").gap(3).text(String.format("%d:%02d", secs / 60, secs % 60), timeColor)
                 .gap(10).icon("coin").gap(3).text(String.valueOf(score), GOLD)
@@ -584,7 +669,7 @@ final class Game {
             for (String h : o.recipe().hint) {
                 if (h.equals("+")) line.text("+", NamedTextColor.GRAY);
                 else if (h.startsWith("x")) line.text(h, NamedTextColor.GRAY);
-                else line.icon(h);
+                else line.icon(h).text("(" + Items.name(h) + ")", LABEL);
             }
             line.gap(6);
             int pips = 8, full = (int) Math.ceil(frac * pips);
