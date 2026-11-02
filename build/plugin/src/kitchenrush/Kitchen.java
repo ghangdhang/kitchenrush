@@ -32,14 +32,14 @@ final class Kitchen {
             "C...........Q",
             "CCCCCBCCCCCCC",
     };
-    /** Two-player kitchen: the middle counter splits prep (west) from cooking and serving (east). */
+    /** Multi-player kitchen: a middle counter splits prep (west) from cooking (east), with one gap to walk through. */
     static final String[] DUO = {
             "LTMRFOCCCCPPCCYYCCC",
             "C........C........C",
             "B........C........C",
             "B........C........S",
             "B........C........S",
-            "C........C........C",
+            "C.................C",
             "W........C........D",
             "Q........C........U",
             "X........C........X",
@@ -70,11 +70,6 @@ final class Kitchen {
 
     int width() {
         return layout[0].length();
-    }
-
-    /** World x of the divider column in a split kitchen, or Integer.MIN_VALUE when there is none. */
-    int dividerX() {
-        return layout == DUO ? ox + 9 : Integer.MIN_VALUE;
     }
 
     @SuppressWarnings({"deprecation", "removal"})

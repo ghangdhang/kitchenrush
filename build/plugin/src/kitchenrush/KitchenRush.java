@@ -20,7 +20,6 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.EquipmentSlot;
@@ -47,7 +46,8 @@ public final class KitchenRush extends JavaPlugin implements Listener {
         }
         world = Bukkit.getWorlds().get(0);
         solo = new Kitchen("1인 주방", world, Kitchen.SOLO, 0, 100, 0, new double[][]{{6.5, 6.5}});
-        duo = new Kitchen("2인 주방", world, Kitchen.DUO, 100, 100, 0, new double[][]{{4.5, 5.5}, {13.5, 5.5}});
+        duo = new Kitchen("2인 주방", world, Kitchen.DUO, 100, 100, 0,
+                new double[][]{{4.5, 5.5}, {13.5, 5.5}, {4.5, 3.5}, {13.5, 3.5}});
         game = new Game(this);
         game.roundSeconds = getConfig().getInt("round-seconds", 180);
         game.guiWidth = getConfig().getInt("hud-gui-width", 480);
@@ -85,17 +85,25 @@ public final class KitchenRush extends JavaPlugin implements Listener {
                     return true;
                 }
                 if (args.length < 2) {
-                    sender.sendMessage(Component.text("/cook duo <같이 할 플레이어>", NamedTextColor.GRAY));
+                    sender.sendMessage(Component.text("/cook duo <같이 할 플레이어> [플레이어...]  (최대 4명)", NamedTextColor.GRAY));
                     return true;
                 }
-                Player mate = Bukkit.getPlayerExact(args[1]);
-                if (mate == null || mate.equals(p)) {
-                    sender.sendMessage(Component.text("같이 할 플레이어를 찾을 수 없어요: " + args[1], NamedTextColor.RED));
+                List<Player> team = new java.util.ArrayList<>(List.of(p));
+                for (int i = 1; i < args.length; i++) {
+                    Player mate = Bukkit.getPlayerExact(args[i]);
+                    if (mate == null || team.contains(mate)) {
+                        sender.sendMessage(Component.text("같이 할 플레이어를 찾을 수 없어요: " + args[i], NamedTextColor.RED));
+                        return true;
+                    }
+                    team.add(mate);
+                }
+                if (team.size() > duo.spawns.size()) {
+                    sender.sendMessage(Component.text("최대 " + duo.spawns.size() + "명까지 함께할 수 있어요.", NamedTextColor.RED));
                     return true;
                 }
-                game.start(Game.Mode.DUO, duo, List.of(p, mate));
-                p.sendMessage(Component.text("당신은 왼쪽(재료 손질·설거지), " + mate.getName() + "님은 오른쪽(조리·서빙) 담당이에요. 가운데 조리대로 주고받으세요!", NamedTextColor.AQUA));
-                mate.sendMessage(Component.text("당신은 오른쪽(조리·서빙), " + p.getName() + "님은 왼쪽(재료 손질·설거지) 담당이에요. 가운데 조리대로 주고받으세요!", NamedTextColor.AQUA));
+                game.start(Game.Mode.DUO, duo, team);
+                Component tip = Component.text("역할은 자유! 가운데 조리대 사이 통로로 오갈 수 있어요. (게임 중 점프 불가)", NamedTextColor.AQUA);
+                team.forEach(x -> x.sendMessage(tip));
             }
             case "stop" -> {
                 Kitchen k = game.kitchen();
@@ -131,7 +139,7 @@ public final class KitchenRush extends JavaPlugin implements Listener {
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) return List.of("solo", "duo", "stop", "hud");
         if (args.length == 2 && args[0].equalsIgnoreCase("hud")) return List.of("480", "640", "960");
-        if (args.length == 2 && args[0].equalsIgnoreCase("duo")) {
+        if (args.length >= 2 && args[0].equalsIgnoreCase("duo")) {
             return Bukkit.getOnlinePlayers().stream().map(Player::getName).filter(n -> !n.equals(sender.getName())).toList();
         }
         return List.of();
@@ -149,7 +157,8 @@ public final class KitchenRush extends JavaPlugin implements Listener {
         p.teleport(lobby());
         if (p.getGameMode() != GameMode.CREATIVE && p.getGameMode() != GameMode.SPECTATOR) p.setGameMode(GameMode.ADVENTURE);
         p.getInventory().clear();
-        p.sendMessage(Component.text("주방 대소동에 오신 걸 환영해요! OP라면 /cook solo 또는 /cook duo <플레이어> 로 시작하세요.", NamedTextColor.GOLD));
+        Game.setJump(p, true);
+        p.sendMessage(Component.text("주방 대소동에 오신 걸 환영해요! OP라면 /cook solo 또는 /cook duo <플레이어...> 로 시작하세요.", NamedTextColor.GOLD));
     }
 
     @EventHandler
@@ -166,21 +175,6 @@ public final class KitchenRush extends JavaPlugin implements Listener {
         e.setCancelled(true);
         if (e.getHand() != EquipmentSlot.HAND || e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         game.interact(e.getPlayer(), s);
-    }
-
-    /** In the two-player kitchen each cook stays on their own side of the middle counter. */
-    @EventHandler
-    public void onMove(PlayerMoveEvent e) {
-        int side = game.side(e.getPlayer());
-        if (side == 0) return;
-        double divider = duo.dividerX();
-        double x = e.getTo().getX();
-        if ((side < 0 && x > divider - 0.3) || (side > 0 && x < divider + 1.3)) {
-            Location back = e.getFrom().clone();
-            back.setYaw(e.getTo().getYaw());
-            back.setPitch(e.getTo().getPitch());
-            e.setTo(back);
-        }
     }
 
     @EventHandler

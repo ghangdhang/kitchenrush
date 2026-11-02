@@ -83,11 +83,12 @@ final class Game {
         return kitchen;
     }
 
-    /** Side of a split kitchen this player must stay on: -1 west, 1 east, 0 anywhere. */
-    int side(Player p) {
-        if (mode != Mode.DUO || phase == Phase.IDLE) return 0;
-        int i = players.indexOf(p);
-        return i == 0 ? -1 : i == 1 ? 1 : 0;
+    static final double DEFAULT_JUMP = 0.41999998688697815;
+
+    /** Jumping is off during a round so nobody hops over counters; the kitchens have walk-through gaps instead. */
+    static void setJump(Player p, boolean allowed) {
+        var jump = p.getAttribute(Attribute.JUMP_STRENGTH);
+        if (jump != null) jump.setBaseValue(allowed ? DEFAULT_JUMP : 0);
     }
 
     // ---------------------------------------------------------------- round lifecycle
@@ -108,6 +109,7 @@ final class Game {
             var hp = p.getAttribute(Attribute.MAX_HEALTH);
             if (hp != null) p.setHealth(hp.getValue());
             p.setWalkSpeed(0.24f);
+            setJump(p, false);
         }
         for (Station s : kitchen.stations) {
             if (s.kind == Station.Kind.PLATES) {
@@ -139,6 +141,7 @@ final class Game {
             if (p.isOnline()) {
                 p.getInventory().clear();
                 p.setWalkSpeed(0.2f);
+                setJump(p, true);
             }
         }
         bars.clear();
