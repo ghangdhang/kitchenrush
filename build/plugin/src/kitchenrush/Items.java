@@ -23,8 +23,8 @@ final class Items {
                 new String[]{"lettuce_chopped"}),
         BURGER("버거", "plate_burger", Set.of("bread", "patty_cooked"), 40, 80,
                 new String[]{"bread", "+", "patty_cooked"}),
-        SOUP("토마토 수프", "plate_soup", Set.of("soup"), 50, 90,
-                new String[]{"tomato_chopped", "x3"}),
+        TOMATO_SALAD("토마토 양상추 샐러드", "plate_mixsalad", Set.of("lettuce_chopped", "tomato_chopped"), 35, 75,
+                new String[]{"lettuce_chopped", "+", "tomato_chopped"}),
         SPECIAL("스페셜 버거", "plate_special", Set.of("bread", "patty_cooked", "lettuce_chopped", "tomato_chopped"), 70, 110,
                 new String[]{"bread", "+", "patty_cooked", "+", "lettuce_chopped", "+", "tomato_chopped"}),
         FISH_SET("생선튀김 정식", "plate_fishset", Set.of("fish_fried", "fries", "lettuce_chopped", "tomato_chopped"), 100, 140,
@@ -53,7 +53,7 @@ final class Items {
             Map.entry("fish", "생선"), Map.entry("fish_chopped", "다진 생선"), Map.entry("fish_fried", "튀긴 다진 생선"),
             Map.entry("potato", "감자"), Map.entry("potato_chopped", "썬 감자"), Map.entry("fries", "튀긴 썬 감자"),
             Map.entry("burnt", "탄 음식"), Map.entry("plate", "접시"), Map.entry("dirty_plate", "더러운 접시"),
-            Map.entry("soup", "끓인 토마토 수프"), Map.entry("pan", "프라이팬"));
+            Map.entry("pan", "프라이팬"));
 
     static final Map<String, String> CHOPS = Map.of(
             "lettuce", "lettuce_chopped", "tomato", "tomato_chopped", "meat", "patty_raw",
@@ -67,7 +67,7 @@ final class Items {
             Map.entry("plate_special", Set.of("bread", "patty_cooked", "lettuce_chopped", "tomato_chopped")),
             Map.entry("plate_fishfries", Set.of("fish_fried", "fries")),
             Map.entry("plate_burger", Set.of("bread", "patty_cooked")),
-            Map.entry("plate_soup", Set.of("soup")),
+            Map.entry("plate_mixsalad", Set.of("lettuce_chopped", "tomato_chopped")),
             Map.entry("plate_fish", Set.of("fish_fried")),
             Map.entry("plate_fries", Set.of("fries")),
             Map.entry("plate_bread", Set.of("bread")),

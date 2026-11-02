@@ -45,7 +45,7 @@ final class Game {
     }
 
     static final int MAX_ORDERS = 4, CHOPS = 6, WASHES = 6, PLATES = 3, DIRTY_DELAY = 7 * 20;
-    static final int PAN_COOK = 120, PAN_BURN = 200, FRY_COOK = 140, FRY_BURN = 220, POT_COOK = 200, POT_BURN = 260;
+    static final int PAN_COOK = 120, PAN_BURN = 200, FRY_COOK = 140, FRY_BURN = 220;
     static final TextColor GOLD = TextColor.color(0xFFD84A);
 
     record Order(Items.Recipe recipe, int total, int[] left) {
@@ -284,12 +284,6 @@ final class Game {
             case CRATE -> {
                 return List.of(Items.name(s.crate) + " 상자");
             }
-            case POT -> {
-                if (s.burnt) return List.of("냄비: 탄 음식", "빈손으로 꺼내서 버리세요");
-                if (s.soupDone) return List.of("냄비: " + Items.name("soup") + " 완성!", "접시를 들고 담으세요");
-                if (s.tomatoes == 0) return null;
-                return List.of("냄비: 썬 토마토 " + s.tomatoes + "/3", s.tomatoes < 3 ? "썬 토마토를 더 넣으세요" : "끓는 중…");
-            }
             case COUNTER, BOARD, PAN, FRYER -> {
                 if (s.item == null) return null;
                 if (Items.isPlate(s.item)) return Items.describePlate(Items.contents(s.item));
@@ -311,8 +305,8 @@ final class Game {
 
     private void spawnOrder() {
         double r = rnd.nextDouble();
-        Items.Recipe recipe = r < 0.15 ? Items.Recipe.SALAD : r < 0.37 ? Items.Recipe.BURGER : r < 0.57 ? Items.Recipe.SOUP
-                : r < 0.8 ? Items.Recipe.SPECIAL : Items.Recipe.FISH_SET;
+        Items.Recipe recipe = r < 0.15 ? Items.Recipe.SALAD : r < 0.35 ? Items.Recipe.TOMATO_SALAD
+                : r < 0.58 ? Items.Recipe.BURGER : r < 0.8 ? Items.Recipe.SPECIAL : Items.Recipe.FISH_SET;
         orders.add(new Order(recipe, recipe.seconds * 20, new int[]{recipe.seconds * 20}));
         playAll(Sound.BLOCK_NOTE_BLOCK_BELL, 0.7f, 1.4f);
     }
@@ -343,31 +337,6 @@ final class Game {
                     sound(fx, Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 0.8f, 1f);
                 }
             } else if (ticks % 6 == 0) {
-                fx.getWorld().spawnParticle(Particle.LARGE_SMOKE, fx, 2, 0.15, 0.1, 0.15, 0.01);
-            }
-        } else if (s.kind == Station.Kind.POT) {
-            if (s.tomatoes == 3 && !s.soupDone && !s.burnt) {
-                s.cook++;
-                s.showBar(s.cook / (float) POT_COOK, NamedTextColor.GREEN, "");
-                if (ticks % 8 == 0) fx.getWorld().spawnParticle(Particle.BUBBLE_POP, fx.clone().add(0, -0.2, 0), 3, 0.2, 0.05, 0.2, 0);
-                if (s.cook >= POT_COOK) {
-                    s.soupDone = true;
-                    s.cook = 0;
-                    s.hideBar();
-                    s.refresh();
-                    sound(fx, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.6f, 1.2f);
-                }
-            } else if (s.soupDone && !s.burnt) {
-                s.cook++;
-                warnBurn(s, fx, s.cook, POT_BURN);
-                if (s.cook >= POT_BURN) {
-                    s.burnt = true;
-                    s.soupDone = false;
-                    s.hideBar();
-                    s.refresh();
-                    sound(fx, Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 0.8f, 1f);
-                }
-            } else if (s.burnt && ticks % 6 == 0) {
                 fx.getWorld().spawnParticle(Particle.LARGE_SMOKE, fx, 2, 0.15, 0.1, 0.15, 0.01);
             }
         }
@@ -447,7 +416,6 @@ final class Game {
             }
             case COUNTER, BOARD -> counter(p, s, hand);
             case PAN, FRYER -> cooker(p, s, hand, ht);
-            case POT -> pot(p, s, hand, ht);
         }
     }
 
@@ -588,34 +556,6 @@ final class Game {
             s.cook = 0;
             s.hideBar();
             good(p, Sound.ENTITY_ITEM_PICKUP);
-            return;
-        }
-        bad(p);
-    }
-
-    private void pot(Player p, Station s, ItemStack hand, String ht) {
-        if (hand == null) {
-            if (s.burnt) {
-                setHand(p, Items.of("burnt"));
-                s.resetPot();
-                good(p, Sound.ENTITY_ITEM_PICKUP);
-            } else bad(p);
-            return;
-        }
-        if ("tomato_chopped".equals(ht)) {
-            if (s.tomatoes < 3 && !s.soupDone && !s.burnt) {
-                s.tomatoes++;
-                s.cook = 0;
-                setHand(p, null);
-                s.refresh();
-                good(p, Sound.ENTITY_GENERIC_SPLASH);
-            } else bad(p);
-            return;
-        }
-        if (Items.isPlate(hand) && s.soupDone && Items.canAdd(Items.contents(hand), "soup")) {
-            setHand(p, Items.addToPlate(hand, "soup"));
-            s.resetPot();
-            good(p, Sound.ITEM_BOTTLE_FILL);
             return;
         }
         bad(p);

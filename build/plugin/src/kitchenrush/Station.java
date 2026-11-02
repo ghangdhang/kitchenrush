@@ -22,7 +22,7 @@ import java.util.List;
 
 /** One interactive spot in the kitchen and its floating visuals. */
 final class Station {
-    enum Kind { COUNTER, BOARD, CRATE, PAN, FRYER, POT, PLATES, RETURN, SINK, SERVE, TRASH }
+    enum Kind { COUNTER, BOARD, CRATE, PAN, FRYER, PLATES, RETURN, SINK, SERVE, TRASH }
 
     static final String TAG = "kitchenrush";
 
@@ -30,8 +30,7 @@ final class Station {
     final Block block;
     final String crate;
     ItemStack item;
-    int chop, cook, tomatoes, count;
-    boolean soupDone, burnt;
+    int chop, cook, count;
 
     private ItemDisplay itemDisplay;
     private TextDisplay bar, hover;
@@ -56,7 +55,6 @@ final class Station {
             case BOARD -> 0.065f;
             case PAN -> 0.06f;
             case FRYER -> -0.1f;
-            case POT -> -0.08f;
             default -> 0.0f;
         };
     }
@@ -68,21 +66,13 @@ final class Station {
 
     void refresh() {
         ItemStack shown = item;
-        if (kind == Kind.POT) {
-            shown = burnt ? Items.of("burnt") : soupDone ? Items.of("soup") : null;
-            if (tomatoes == 0 && !soupDone && !burnt) {
-                block.setType(Material.CAULDRON, false);
-            } else {
-                block.setBlockData(Bukkit.createBlockData("minecraft:water_cauldron[level=" + Math.max(1, Math.min(3, tomatoes)) + "]"), false);
-            }
-        }
         if (shown == null) {
             if (itemDisplay != null) itemDisplay.remove();
             itemDisplay = null;
             return;
         }
         if (itemDisplay == null || !itemDisplay.isValid()) {
-            itemDisplay = restItem(top().add(0, itemHeight(), 0), shown, kind == Kind.POT ? 0.8f : 0.65f);
+            itemDisplay = restItem(top().add(0, itemHeight(), 0), shown, 0.65f);
         } else {
             itemDisplay.setItemStack(shown);
         }
@@ -192,15 +182,6 @@ final class Station {
     void hideBar() {
         if (bar != null) bar.remove();
         bar = null;
-    }
-
-    void resetPot() {
-        tomatoes = 0;
-        cook = 0;
-        soupDone = false;
-        burnt = false;
-        hideBar();
-        refresh();
     }
 
     void removeVisuals() {

@@ -184,7 +184,12 @@ def draw(name):
         plate_base(c)
         for (x, y, col) in ((6, 8.5, GREEN), (9.5, 8, GREEN_L), (10.5, 10.5, GREEN), (6.5, 11, GREEN_L)):
             c.ellipse(x, y, 1.9, 1.6, col)
-        c.dots([(8, 10), (8, 9)], RED)
+    elif name == 'plate_mixsalad':
+        plate_base(c)
+        for (x, y, col) in ((6, 8.5, GREEN), (10.5, 10.5, GREEN), (6.5, 11, GREEN_L)):
+            c.ellipse(x, y, 1.9, 1.6, col)
+        c.ellipse(9.5, 8.5, 1.8, 1.6, RED)
+        c.set(9, 8, RED_L)
     elif name == 'plate_bread':
         plate_base(c)
         bun_top(c, 8, 10, 4.2, 4)
@@ -213,9 +218,10 @@ def draw(name):
         c.dots([(4, 6), (6, 5), (9, 10), (11, 11)], FISH_MEAT_D)
         c.rect(13, 3, 14, 4, FISH)
     elif name == 'fish_fried':
-        c.ellipse(8, 8.5, 6.5, 3.8, FRY)
-        c.ellipse(8, 8.5, 6.5, 3.8, FRY_L, cond=lambda x, y: y < 7)
-        c.dots([(5, 9), (8, 10), (11, 8), (6, 7)], FRY_D)
+        fish_body(c, 7, 8.5, 5.5, 3.5, FRY, FRY_D)
+        c.ellipse(7, 8.5, 5.5, 3.5, FRY_L, cond=lambda x, y: y < 7)
+        c.dots([(5, 9), (8, 10), (10, 8)], FRY_D)
+        c.set(3, 7, OUTLINE)
     elif name == 'potato':
         c.ellipse(8, 8.5, 6, 5, POTATO)
         c.ellipse(8, 8.5, 6, 5, POTATO_D, cond=lambda x, y: (x - 8) + (y - 8.5) > 3)
@@ -283,8 +289,8 @@ def draw(name):
 
 
 ITEMS = ['tomato', 'tomato_chopped', 'lettuce', 'lettuce_chopped', 'meat', 'patty_raw', 'patty_cooked',
-         'burnt', 'bread', 'plate', 'plate_salad', 'plate_bread', 'plate_patty', 'plate_burger', 'plate_soup',
-         'soup', 'pan', 'fish', 'fish_chopped', 'fish_fried', 'potato', 'potato_chopped', 'fries', 'dirty_plate',
+         'burnt', 'bread', 'plate', 'plate_salad', 'plate_mixsalad', 'plate_bread', 'plate_patty', 'plate_burger',
+         'pan', 'fish', 'fish_chopped', 'fish_fried', 'potato', 'potato_chopped', 'fries', 'dirty_plate',
          'plate_tomato', 'plate_fish', 'plate_fries', 'plate_fishfries', 'plate_special', 'plate_fishset']
 ICONS_ONLY = ['clock', 'coin']
 
@@ -443,10 +449,22 @@ def m_fish_pieces(m, t):
 
 
 def m_fish_fried(m, t):
-    m.box(t, -3.6, 0, -1.5, 3.6, 1.8, 1.5, 'fry', top='fry_l')
-    m.box(t, -2.6, 0, -2, 2.6, 1.5, 2, 'fry', top='fry_l')
-    m.box(t, -1.5, 1.8, -0.8, -0.8, 2, -0.2, 'fry_d')
-    m.box(t, 1, 1.8, 0.3, 1.7, 2, 0.9, 'fry_d')
+    """A whole battered fish lying on its side: tapered body, tail fin, fin on top, eye and crumbs."""
+    # body tapers from head (-x) to tail (+x)
+    m.box(t, -4.2, 0, -1.0, -3.2, 2.4, 1.0, 'fry', top='fry_l')
+    m.box(t, -3.2, 0, -1.4, 1.2, 3.2, 1.4, 'fry', top='fry_l')
+    m.box(t, 1.2, 0.3, -1.1, 2.8, 2.8, 1.1, 'fry', top='fry_l')
+    m.box(t, 2.8, 0.7, -0.7, 3.8, 2.3, 0.7, 'fry')
+    # forked tail fin
+    m.box(t, 3.8, 1.2, -0.4, 4.6, 1.8, 0.4, 'fry_d')
+    m.box(t, 4.6, 1.8, -0.35, 5.8, 3.4, 0.35, 'fry_d', top='fry')
+    m.box(t, 4.6, -0.0, -0.35, 5.8, 1.2, 0.35, 'fry_d')
+    # dorsal fin and eye
+    m.box(t, -1.6, 3.2, -0.3, 1.0, 3.9, 0.3, 'fry_d')
+    m.box(t, -3.6, 1.6, -1.45, -3.0, 2.2, 1.45, 'black')
+    # crispy crumbs
+    for x, y in ((-2, 0.8), (0, 1.8), (1.8, 1.1), (-0.8, 2.7)):
+        m.box(t, x - 0.3, y, -1.45, x + 0.3, y + 0.4, 1.45, 'fry_l')
 
 
 def m_potato(m, t):
@@ -530,12 +548,12 @@ FOOD_3D = {
     'potato': lambda m: m_potato(m, T()),
     'potato_chopped': lambda m: m_potato_sticks(m, T()),
     'fries': lambda m: m_fries(m, T()),
-    'soup': lambda m: m_soup_disc(m, T()),
     'pan': lambda m: m_pan(m, T()),
     'plate': lambda m: m_plate(m, T()),
     'dirty_plate': lambda m: m_plate(m, T(), dirty=True),
-    'plate_salad': lambda m: (m_plate(m, T()), m_lettuce_flakes(m, T(dy=0.95, s=0.8)),
-                              m_tomato_slices(m, T(dx=0.5, dy=1.6, dz=-0.5, s=0.45))),
+    'plate_salad': lambda m: (m_plate(m, T()), m_lettuce_flakes(m, T(dy=0.95, s=0.8))),
+    'plate_mixsalad': lambda m: (m_plate(m, T()), m_lettuce_flakes(m, T(dy=0.95, s=0.8)),
+                                 m_tomato_slices(m, T(dx=0.4, dy=1.9, dz=-0.3, s=0.6))),
     'plate_tomato': lambda m: (m_plate(m, T()), m_tomato_slices(m, T(dy=0.95, s=0.8))),
     'plate_bread': lambda m: (m_plate(m, T()), m_bun_bottom(m, T(dy=0.95)), m_bun_top(m, T(dy=2.2))),
     'plate_patty': lambda m: (m_plate(m, T()), m_patty(m, T(dy=0.95))),
@@ -545,7 +563,6 @@ FOOD_3D = {
                                 m.disc(T(dy=3.85), 3.4, 0, 0.6, 'red', top='pink_in'),
                                 m.disc(T(dy=4.45), 4.3, 0, 0.5, 'green', top='green_l'),
                                 m_bun_top(m, T(dy=4.95))),
-    'plate_soup': lambda m: (m_plate(m, T()), m_bowl_soup(m, T(dy=0.95))),
     'plate_fish': lambda m: (m_plate(m, T()), m_fish_fried(m, T(dy=0.95, s=0.9))),
     'plate_fries': lambda m: (m_plate(m, T()), m_fries(m, T(dy=0.95, s=0.85))),
     'plate_fishfries': lambda m: (m_plate(m, T()), m_fish_fried(m, T(dx=-1.6, dy=0.95, s=0.7)),
@@ -627,12 +644,276 @@ def tex_bricks():
     return c
 
 
+STEEL, STEEL_L, STEEL_D, STEEL_DD = hexc('c9d1d8'), hexc('e6ebef'), hexc('9aa5ae'), hexc('5d6770')
+WOOD, WOOD_L, WOOD_D, WOOD_DD = hexc('c6864a'), hexc('e0a96a'), hexc('9a6232'), hexc('6e4424')
+
+
+def brushed(c, base, seed, x0=0, y0=0, x1=15, y1=15):
+    """Brushed-metal look: horizontal streaks."""
+    rnd = _random.Random(seed)
+    for y in range(y0, y1 + 1):
+        d = rnd.randint(-6, 6)
+        for x in range(x0, x1 + 1):
+            e = d + rnd.randint(-2, 2)
+            c.set(x, y, tuple(max(0, min(255, v + e)) for v in base[:3]) + (255,))
+
+
+def frame(c, col, x0=0, y0=0, x1=15, y1=15):
+    for x in range(x0, x1 + 1):
+        c.set(x, y0, col)
+        c.set(x, y1, col)
+    for y in range(y0, y1 + 1):
+        c.set(x0, y, col)
+        c.set(x1, y, col)
+
+
+def tex_crate_side():
+    c = Canvas()
+    noise_fill(c, WOOD, 6, 11)
+    for y in (4, 8, 12):
+        for x in range(16):
+            c.set(x, y, WOOD_D)
+    frame(c, WOOD_DD)
+    for x in range(1, 15):
+        c.set(x, 1, WOOD_L)
+    for i in range(1, 15):
+        c.set(i, i, WOOD_D)
+    for x, y in ((1, 1), (14, 1), (1, 14), (14, 14)):
+        c.set(x, y, STEEL_D)
+    return c
+
+
+def tex_crate_top():
+    c = Canvas()
+    noise_fill(c, WOOD_L, 6, 12)
+    for x in (3, 7, 11):
+        for y in range(16):
+            c.set(x, y, WOOD_DD)
+    frame(c, WOOD_DD)
+    for x, y in ((1, 1), (14, 1), (1, 14), (14, 14)):
+        c.set(x, y, STEEL_D)
+    return c
+
+
+def tex_crate_bottom():
+    c = Canvas()
+    noise_fill(c, WOOD_D, 4, 13)
+    frame(c, WOOD_DD)
+    return c
+
+
+ENAMEL, ENAMEL_D = hexc('f0e4cc'), hexc('d6c4a2')
+
+
+def tex_stove_side():
+    c = Canvas()
+    noise_fill(c, ENAMEL, 3, 21)
+    frame(c, hexc('8a6a50'))
+    for x in range(1, 15):
+        c.set(x, 14, ENAMEL_D)
+    return c
+
+
+def tex_stove_front(glow):
+    c = Canvas()
+    noise_fill(c, ENAMEL, 3, 22)
+    frame(c, hexc('8a6a50'))
+    for x in (3, 6, 9, 12):
+        c.set(x, 2, hexc('d8342c'))
+        c.set(x + 1, 2, hexc('d8342c'))
+        c.set(x, 3, hexc('9a1e18'))
+        c.set(x + 1, 3, hexc('9a1e18'))
+    for y in range(6, 14):
+        for x in range(2, 14):
+            edge = y in (6, 13) or x in (2, 13)
+            if edge:
+                c.set(x, y, STEEL_DD)
+            elif glow:
+                c.set(x, y, hexc('ff9a3a') if (x + y + glow) % 3 else hexc('ffc860'))
+            else:
+                c.set(x, y, hexc('3a3a44'))
+    for x in range(5, 11):
+        c.set(x, 5, STEEL_D)
+    return c
+
+
+def tex_stove_top():
+    c = Canvas()
+    brushed(c, hexc('3b3f45'), 23)
+    frame(c, hexc('22262b'))
+    for i in range(2, 14):
+        c.set(i, 7, hexc('1a1d21'))
+        c.set(i, 8, hexc('1a1d21'))
+        c.set(7, i, hexc('1a1d21'))
+        c.set(8, i, hexc('1a1d21'))
+    return c
+
+
+def tex_dark():
+    c = Canvas()
+    noise_fill(c, hexc('3b3f45'), 3, 24)
+    return c
+
+
+def tex_serve():
+    c = Canvas()
+    brushed(c, STEEL_L, 31)
+    frame(c, STEEL_DD)
+    for x in range(1, 15):
+        c.set(x, 1, hexc('ffffff'))
+    yellow, dark = hexc('ffcc33'), hexc('c8901a')
+    for k in range(3):
+        for i in range(4):
+            c.set(4 + i + k * 3, 4 + i, yellow)
+            c.set(4 + i + k * 3, 11 - i, yellow)
+            c.set(4 + i + k * 3, 5 + i, dark)
+            c.set(4 + i + k * 3, 12 - i, dark)
+    return c
+
+
+BIN, BIN_D, BIN_L = hexc('6f8a7a'), hexc('4a6050'), hexc('9ab8a4')
+
+
+def tex_bin_side():
+    c = Canvas()
+    noise_fill(c, BIN, 4, 41)
+    for x in (2, 5, 8, 11, 14):
+        for y in range(3, 15):
+            c.set(x, y, BIN_D)
+            if x + 1 < 16:
+                c.set(x + 1, y, BIN_L)
+    for x in range(16):
+        c.set(x, 0, BIN_L)
+        c.set(x, 1, BIN_L)
+        c.set(x, 2, BIN_D)
+        c.set(x, 15, BIN_D)
+    return c
+
+
+def tex_bin_top():
+    c = Canvas()
+    for y in range(16):
+        for x in range(16):
+            c.set(x, y, hexc('1e1e1e'))
+    frame(c, BIN_L)
+    frame(c, BIN, 1, 1, 14, 14)
+    return c
+
+
+def tex_bin_bottom():
+    c = Canvas()
+    noise_fill(c, BIN_D, 3, 42)
+    return c
+
+
+def tex_board():
+    c = Canvas()
+    noise_fill(c, hexc('ead7ac'), 4, 51)
+    frame(c, hexc('c9a874'))
+    rnd = _random.Random(52)
+    for _ in range(6):
+        x, y = rnd.randint(3, 11), rnd.randint(3, 12)
+        for i in range(3):
+            c.set(x + i, y - i // 2, hexc('cdb684'))
+    return c
+
+
+def tex_cauldron_side():
+    c = Canvas()
+    brushed(c, STEEL, 61)
+    for x in range(16):
+        c.set(x, 0, STEEL_L)
+        c.set(x, 1, STEEL_L)
+        c.set(x, 2, STEEL_D)
+    for y in range(13, 16):
+        for x in range(4, 12):
+            c.p[y][x] = None
+    for y in range(13, 16):
+        for x in (0, 1, 2, 3, 12, 13, 14, 15):
+            c.set(x, y, STEEL_DD)
+    return c
+
+
+def tex_cauldron_top():
+    c = Canvas()
+    for y in range(16):
+        for x in range(16):
+            if x < 2 or y < 2 or x > 13 or y > 13:
+                c.set(x, y, STEEL_L if (x + y) % 5 else STEEL)
+    return c
+
+
+def tex_cauldron_inner():
+    c = Canvas()
+    brushed(c, STEEL_D, 62)
+    return c
+
+
+def tex_cauldron_bottom():
+    c = Canvas()
+    brushed(c, STEEL_DD, 63)
+    return c
+
+
+def tex_oil():
+    """Four animation frames of bubbling golden frying oil."""
+    frames = 4
+    c = Canvas(16, 16 * frames)
+    for f in range(frames):
+        rnd = _random.Random(70 + f)
+        for y in range(16):
+            for x in range(16):
+                c.set(x, f * 16 + y, (232 + rnd.randint(-8, 8), 168 + rnd.randint(-10, 10), 52 + rnd.randint(-8, 8), 255))
+        for k in range(5):
+            bx, by = (k * 5 + f * 3) % 14 + 1, (k * 7 + f * 4) % 14 + 1
+            c.set(bx, f * 16 + by, hexc('ffe7a0'))
+            c.set(bx + 1, f * 16 + by, hexc('ffd77a'))
+    return c
+
+
+def tex_stove_front_on():
+    c = Canvas(16, 32)
+    for f in range(2):
+        fr = tex_stove_front(glow=f + 1)
+        for y in range(16):
+            for x in range(16):
+                c.p[f * 16 + y][x] = fr.p[y][x]
+    return c
+
+
 BLOCK_TEXTURES = {
     'white_concrete': tex_floor,
     'sandstone_top': tex_counter_top,
     'sandstone': tex_counter_side,
     'sandstone_bottom': tex_counter_bottom,
     'bricks': tex_bricks,
+    # ingredient crates (barrels facing up)
+    'barrel_side': tex_crate_side,
+    'barrel_top': tex_crate_top,
+    'barrel_top_open': tex_crate_top,
+    'barrel_bottom': tex_crate_bottom,
+    # stove under the pans (smoker)
+    'smoker_side': tex_stove_side,
+    'smoker_front': lambda: tex_stove_front(glow=0),
+    'smoker_top': tex_stove_top,
+    'smoker_bottom': tex_dark,
+    # serving hatch
+    'lime_glazed_terracotta': tex_serve,
+    # bin (composter)
+    'composter_side': tex_bin_side,
+    'composter_top': tex_bin_top,
+    'composter_bottom': tex_bin_bottom,
+    # chopping board (birch pressure plate uses birch planks)
+    'birch_planks': tex_board,
+    # fryer and sink (cauldrons): stainless steel
+    'cauldron_side': tex_cauldron_side,
+    'cauldron_top': tex_cauldron_top,
+    'cauldron_inner': tex_cauldron_inner,
+    'cauldron_bottom': tex_cauldron_bottom,
+}
+ANIMATED_TEXTURES = {
+    'lava_still': (tex_oil, 4),
+    'smoker_front_on': (tex_stove_front_on, 8),
 }
 
 # ---------------------------------------------------------------- HUD panels and big digits
@@ -762,6 +1043,9 @@ for d, rows in DIGITS.items():
 
 for block, fn in BLOCK_TEXTURES.items():
     files[f'assets/minecraft/textures/block/{block}.png'] = png(fn())
+for block, (fn, frametime) in ANIMATED_TEXTURES.items():
+    files[f'assets/minecraft/textures/block/{block}.png'] = png(fn())
+    files[f'assets/minecraft/textures/block/{block}.png.mcmeta'] = json.dumps({'animation': {'frametime': frametime}})
 
 files['assets/kitchen/font/icons.json'] = json.dumps({'providers': providers}, ensure_ascii=True, indent=1)
 
@@ -847,7 +1131,9 @@ def render_iso(model, k=6):
 iso_names = list(FOOD_3D)
 cols = 8
 tile_w, tile_h = 34 * 6, 30 * 6
-sheet3d = Canvas(tile_w * cols, tile_h * ((len(iso_names) + cols - 1) // cols) + 16 * 8)
+tex_all = list(BLOCK_TEXTURES.items()) + [(k, v[0]) for k, v in ANIMATED_TEXTURES.items()]
+per_row = (tile_w * cols) // 136
+sheet3d = Canvas(tile_w * cols, tile_h * ((len(iso_names) + cols - 1) // cols) + 136 * ((len(tex_all) + per_row - 1) // per_row))
 for i, n in enumerate(iso_names):
     mdl = Model()
     FOOD_3D[n](mdl)
@@ -858,13 +1144,14 @@ for i, n in enumerate(iso_names):
             if r.p[y][x]:
                 sheet3d.set(bx + x, by + y, r.p[y][x])
 by = tile_h * ((len(iso_names) + cols - 1) // cols)
-for i, (block, fn) in enumerate(BLOCK_TEXTURES.items()):
+for i, (block, fn) in enumerate(tex_all):
     t = fn()
+    tx, ty = (i % per_row) * 136, by + (i // per_row) * 136
     for y in range(16):
         for x in range(16):
             for yy in range(8):
                 for xx in range(8):
-                    sheet3d.set(i * 136 + x * 8 + xx, by + y * 8 + yy, t.p[y][x])
+                    sheet3d.set(tx + x * 8 + xx, ty + y * 8 + yy, t.p[y][x])
 for y in range(sheet3d.h):
     for x in range(sheet3d.w):
         if sheet3d.p[y][x] is None:

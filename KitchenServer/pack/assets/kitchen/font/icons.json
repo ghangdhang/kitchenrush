@@ -101,7 +101,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kitchen:item/plate_bread.png",
+   "file": "kitchen:item/plate_mixsalad.png",
    "height": 9,
    "ascent": 8,
    "chars": [
@@ -110,7 +110,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kitchen:item/plate_patty.png",
+   "file": "kitchen:item/plate_bread.png",
    "height": 9,
    "ascent": 8,
    "chars": [
@@ -119,7 +119,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kitchen:item/plate_burger.png",
+   "file": "kitchen:item/plate_patty.png",
    "height": 9,
    "ascent": 8,
    "chars": [
@@ -128,7 +128,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kitchen:item/plate_soup.png",
+   "file": "kitchen:item/plate_burger.png",
    "height": 9,
    "ascent": 8,
    "chars": [
@@ -137,7 +137,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kitchen:item/soup.png",
+   "file": "kitchen:item/pan.png",
    "height": 9,
    "ascent": 8,
    "chars": [
@@ -146,7 +146,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kitchen:item/pan.png",
+   "file": "kitchen:item/fish.png",
    "height": 9,
    "ascent": 8,
    "chars": [
@@ -155,7 +155,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kitchen:item/fish.png",
+   "file": "kitchen:item/fish_chopped.png",
    "height": 9,
    "ascent": 8,
    "chars": [
@@ -164,7 +164,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kitchen:item/fish_chopped.png",
+   "file": "kitchen:item/fish_fried.png",
    "height": 9,
    "ascent": 8,
    "chars": [
@@ -173,7 +173,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kitchen:item/fish_fried.png",
+   "file": "kitchen:item/potato.png",
    "height": 9,
    "ascent": 8,
    "chars": [
@@ -182,7 +182,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kitchen:item/potato.png",
+   "file": "kitchen:item/potato_chopped.png",
    "height": 9,
    "ascent": 8,
    "chars": [
@@ -191,7 +191,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kitchen:item/potato_chopped.png",
+   "file": "kitchen:item/fries.png",
    "height": 9,
    "ascent": 8,
    "chars": [
@@ -200,7 +200,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kitchen:item/fries.png",
+   "file": "kitchen:item/dirty_plate.png",
    "height": 9,
    "ascent": 8,
    "chars": [
@@ -209,7 +209,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kitchen:item/dirty_plate.png",
+   "file": "kitchen:item/plate_tomato.png",
    "height": 9,
    "ascent": 8,
    "chars": [
@@ -218,7 +218,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kitchen:item/plate_tomato.png",
+   "file": "kitchen:item/plate_fish.png",
    "height": 9,
    "ascent": 8,
    "chars": [
@@ -227,7 +227,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kitchen:item/plate_fish.png",
+   "file": "kitchen:item/plate_fries.png",
    "height": 9,
    "ascent": 8,
    "chars": [
@@ -236,7 +236,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kitchen:item/plate_fries.png",
+   "file": "kitchen:item/plate_fishfries.png",
    "height": 9,
    "ascent": 8,
    "chars": [
@@ -245,7 +245,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kitchen:item/plate_fishfries.png",
+   "file": "kitchen:item/plate_special.png",
    "height": 9,
    "ascent": 8,
    "chars": [
@@ -254,7 +254,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kitchen:item/plate_special.png",
+   "file": "kitchen:item/plate_fishset.png",
    "height": 9,
    "ascent": 8,
    "chars": [
@@ -263,7 +263,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kitchen:item/plate_fishset.png",
+   "file": "kitchen:font/clock.png",
    "height": 9,
    "ascent": 8,
    "chars": [
@@ -272,7 +272,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kitchen:font/clock.png",
+   "file": "kitchen:font/coin.png",
    "height": 9,
    "ascent": 8,
    "chars": [
@@ -281,20 +281,11 @@
   },
   {
    "type": "bitmap",
-   "file": "kitchen:font/coin.png",
-   "height": 9,
-   "ascent": 8,
-   "chars": [
-    "\ue01f"
-   ]
-  },
-  {
-   "type": "bitmap",
    "file": "kitchen:font/pip.png",
    "height": 7,
    "ascent": 7,
    "chars": [
-    "\ue020"
+    "\ue01f"
    ]
   },
   {
@@ -303,7 +294,7 @@
    "height": 16,
    "ascent": 12,
    "chars": [
-    "\ue021"
+    "\ue020"
    ]
   },
   {
@@ -312,7 +303,7 @@
    "height": 16,
    "ascent": 12,
    "chars": [
-    "\ue022"
+    "\ue021"
    ]
   },
   {
@@ -321,7 +312,7 @@
    "height": 16,
    "ascent": 12,
    "chars": [
-    "\ue023"
+    "\ue022"
    ]
   },
   {
@@ -330,7 +321,7 @@
    "height": 22,
    "ascent": 17,
    "chars": [
-    "\ue024"
+    "\ue023"
    ]
   },
   {
@@ -339,7 +330,7 @@
    "height": 22,
    "ascent": 17,
    "chars": [
-    "\ue025"
+    "\ue024"
    ]
   },
   {
@@ -348,7 +339,7 @@
    "height": 22,
    "ascent": 17,
    "chars": [
-    "\ue026"
+    "\ue025"
    ]
   },
   {
@@ -357,7 +348,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue027"
+    "\ue026"
    ]
   },
   {
@@ -366,7 +357,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue028"
+    "\ue027"
    ]
   },
   {
@@ -375,7 +366,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue029"
+    "\ue028"
    ]
   },
   {
@@ -384,7 +375,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue02a"
+    "\ue029"
    ]
   },
   {
@@ -393,7 +384,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue02b"
+    "\ue02a"
    ]
   },
   {
@@ -402,7 +393,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue02c"
+    "\ue02b"
    ]
   },
   {
@@ -411,7 +402,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue02d"
+    "\ue02c"
    ]
   },
   {
@@ -420,7 +411,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue02e"
+    "\ue02d"
    ]
   },
   {
@@ -429,7 +420,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue02f"
+    "\ue02e"
    ]
   },
   {
@@ -438,7 +429,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue030"
+    "\ue02f"
    ]
   },
   {
@@ -447,7 +438,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue031"
+    "\ue030"
    ]
   },
   {
@@ -456,7 +447,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue032"
+    "\ue031"
    ]
   },
   {
@@ -465,7 +456,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue033"
+    "\ue032"
    ]
   },
   {
@@ -474,7 +465,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue034"
+    "\ue033"
    ]
   }
  ]

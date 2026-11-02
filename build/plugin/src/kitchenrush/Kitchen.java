@@ -18,11 +18,11 @@ final class Kitchen {
     /*
      * Top-down layouts (north at the top). One character per block.
      *   C counter   B chopping board   L/T/M/R/F/O lettuce/tomato/meat/bread/fish/potato crates
-     *   P stove with pan   Y fryer   K pot   D clean plates   U dirty plate return   W sink   Q drying rack
+     *   P stove with pan   Y fryer   D clean plates   U dirty plate return   W sink   Q drying rack
      *   S serving hatch   X bin   . floor
      */
     static final String[] SOLO = {
-            "LTMRFOCPPKYYC",
+            "LTMRFOCPPCYYC",
             "C...........C",
             "B...........C",
             "B...CCDUC...S",
@@ -34,7 +34,7 @@ final class Kitchen {
     };
     /** Two-player kitchen: the middle counter splits prep (west) from cooking and serving (east). */
     static final String[] DUO = {
-            "LTMRFOCCCCPPKKYYCCC",
+            "LTMRFOCCCCPPCCYYCCC",
             "C........C........C",
             "B........C........C",
             "B........C........S",
@@ -215,13 +215,6 @@ final class Kitchen {
                 b.setType(Material.LAVA_CAULDRON, false);
                 s = add(new Station(Station.Kind.FRYER, b, null));
                 s.label("튀김기", 1.0, 0.5f);
-            }
-            case 'K' -> {
-                b.setType(Material.CAULDRON, false);
-                world.getBlockAt(ox + x, oy, oz + z).setBlockData(
-                        Bukkit.createBlockData("minecraft:campfire[lit=true,signal_fire=false]"), false);
-                s = add(new Station(Station.Kind.POT, b, null));
-                s.label("냄비 (토마토 3개)", 1.0, 0.5f);
             }
             case 'S' -> {
                 b.setType(Material.LIME_GLAZED_TERRACOTTA, false);
