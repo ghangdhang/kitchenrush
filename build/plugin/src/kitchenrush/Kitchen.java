@@ -161,7 +161,7 @@ final class Kitchen {
                 // Plate cabinet (retextured smooth quartz) with a wire cover: plates are taken here, not assembled.
                 b.setType(PLATE_STAND, false);
                 s = add(new Station(Station.Kind.PLATES, b, null));
-                s.addExtra(s.restItem(s.top(), Items.of("plate_cover"), 0.65f));
+                s.addExtra(s.restItem(s.top(), Items.of("plate_cover"), Station.FOOD_SCALE));
                 s.label(c == 'D' ? "접시" : "건조대", 1.0, 0.5f);
                 if (c == 'D') plates = s;
             }
@@ -195,13 +195,13 @@ final class Kitchen {
                     default -> "bread";
                 };
                 s = add(new Station(Station.Kind.CRATE, b, type));
-                s.addExtra(s.restItem(s.top(), Items.of(type), 0.55f));
+                s.addExtra(s.restItem(s.top(), Items.of(type), 0.8f));
                 s.label(Items.name(type), 0.7, 0.5f);
             }
             case 'P' -> {
                 b.setBlockData(Bukkit.createBlockData("minecraft:smoker[facing=south,lit=true]"), false);
                 s = add(new Station(Station.Kind.PAN, b, null));
-                s.addExtra(s.restItem(s.top(), Items.of("pan"), 0.85f));
+                s.addExtra(s.restItem(s.top(), Items.of("pan"), 1.0f));
                 s.label("프라이팬", 1.0, 0.5f);
             }
             case 'Y' -> {

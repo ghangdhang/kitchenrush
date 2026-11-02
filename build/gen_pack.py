@@ -372,10 +372,10 @@ class Model:
                 'fixed': {'rotation': [0, 0, 0], 'translation': [0, 0, 0], 'scale': [1, 1, 1]},
                 'gui': {'rotation': [30, 225, 0], 'translation': [0, 3, 0], 'scale': [0.85, 0.85, 0.85]},
                 'ground': {'translation': [0, 3, 0], 'scale': [0.5, 0.5, 0.5]},
-                'firstperson_righthand': {'rotation': [0, 45, 0], 'translation': [0, 4, 0], 'scale': [0.6, 0.6, 0.6]},
-                'firstperson_lefthand': {'rotation': [0, 45, 0], 'translation': [0, 4, 0], 'scale': [0.6, 0.6, 0.6]},
-                'thirdperson_righthand': {'rotation': [75, 45, 0], 'translation': [0, 2.5, 0], 'scale': [0.5, 0.5, 0.5]},
-                'thirdperson_lefthand': {'rotation': [75, 45, 0], 'translation': [0, 2.5, 0], 'scale': [0.5, 0.5, 0.5]},
+                'firstperson_righthand': {'rotation': [0, 45, 0], 'translation': [0, 4, 0], 'scale': [0.78, 0.78, 0.78]},
+                'firstperson_lefthand': {'rotation': [0, 45, 0], 'translation': [0, 4, 0], 'scale': [0.78, 0.78, 0.78]},
+                'thirdperson_righthand': {'rotation': [75, 45, 0], 'translation': [0, 2.5, 0], 'scale': [0.65, 0.65, 0.65]},
+                'thirdperson_lefthand': {'rotation': [75, 45, 0], 'translation': [0, 2.5, 0], 'scale': [0.65, 0.65, 0.65]},
                 'head': {'translation': [0, 14, 0]},
             }}
 

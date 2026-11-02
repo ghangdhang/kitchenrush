@@ -19,15 +19,15 @@ import java.util.TreeSet;
 /** Kitchen items: ingredients, plates and recipes. */
 final class Items {
     enum Recipe {
-        SALAD("샐러드", "plate_salad", Set.of("lettuce_chopped"), 20, 60,
+        SALAD("양상추 샐러드", "plate_salad", Set.of("lettuce_chopped"), 1, 60,
                 new String[]{"lettuce_chopped"}),
-        BURGER("버거", "plate_burger", Set.of("bread", "patty_cooked"), 40, 80,
+        BURGER("버거", "plate_burger", Set.of("bread", "patty_cooked"), 3, 80,
                 new String[]{"bread", "+", "patty_cooked"}),
-        TOMATO_SALAD("토마토 양상추 샐러드", "plate_mixsalad", Set.of("lettuce_chopped", "tomato_chopped"), 35, 75,
+        TOMATO_SALAD("토마토 양상추 샐러드", "plate_mixsalad", Set.of("lettuce_chopped", "tomato_chopped"), 2, 75,
                 new String[]{"lettuce_chopped", "+", "tomato_chopped"}),
-        SPECIAL("스페셜 버거", "plate_special", Set.of("bread", "patty_cooked", "lettuce_chopped", "tomato_chopped"), 70, 110,
+        SPECIAL("스페셜 버거", "plate_special", Set.of("bread", "patty_cooked", "lettuce_chopped", "tomato_chopped"), 4, 110,
                 new String[]{"bread", "+", "patty_cooked", "+", "lettuce_chopped", "+", "tomato_chopped"}),
-        FISH_SET("생선튀김 정식", "plate_fishset", Set.of("fish_fried", "fries", "lettuce_chopped", "tomato_chopped"), 100, 140,
+        FISH_SET("생선튀김 정식", "plate_fishset", Set.of("fish_fried", "fries", "lettuce_chopped", "tomato_chopped"), 5, 140,
                 new String[]{"fish_fried", "+", "fries", "+", "lettuce_chopped", "+", "tomato_chopped"});
 
         final String name, icon;

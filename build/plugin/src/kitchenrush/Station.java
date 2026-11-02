@@ -25,6 +25,8 @@ final class Station {
     enum Kind { COUNTER, BOARD, CRATE, PAN, FRYER, PLATES, RETURN, SINK, SERVE, TRASH }
 
     static final String TAG = "kitchenrush";
+    /** Size of food, plates and covers resting on stations (1.5x the original 0.65). */
+    static final float FOOD_SCALE = 0.975f;
 
     final Kind kind;
     final Block block;
@@ -53,7 +55,7 @@ final class Station {
     private float itemHeight() {
         return switch (kind) {
             case BOARD -> 0.065f;
-            case PAN -> 0.06f;
+            case PAN -> 0.09f;
             case FRYER -> -0.1f;
             default -> 0.0f;
         };
@@ -72,7 +74,7 @@ final class Station {
             return;
         }
         if (itemDisplay == null || !itemDisplay.isValid()) {
-            itemDisplay = restItem(top().add(0, itemHeight(), 0), shown, 0.65f);
+            itemDisplay = restItem(top().add(0, itemHeight(), 0), shown, FOOD_SCALE);
         } else {
             itemDisplay.setItemStack(shown);
         }
@@ -83,7 +85,7 @@ final class Station {
         while (stack.size() > count) stack.remove(stack.size() - 1).remove();
         while (stack.size() < count) {
             ItemStack it = type.equals("plate") ? Items.plate(java.util.Set.of()) : Items.of(type);
-            stack.add(restItem(top().add(0, base + stack.size() * 0.045, 0), it, 0.65f));
+            stack.add(restItem(top().add(0, base + stack.size() * 0.065, 0), it, FOOD_SCALE));
         }
     }
 

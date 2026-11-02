@@ -30,16 +30,14 @@ final class Game {
     enum Phase { IDLE, COUNTDOWN, RUNNING }
 
     enum Mode {
-        SOLO("1인", new int[]{80, 180, 280}, 18),
-        DUO("2인", new int[]{150, 320, 480}, 13);
+        SOLO("1인", 18),
+        DUO("다인", 13);
 
         final String label;
-        final int[] stars;
         final int orderEvery;
 
-        Mode(String label, int[] stars, int orderEvery) {
+        Mode(String label, int orderEvery) {
             this.label = label;
-            this.stars = stars;
             this.orderEvery = orderEvery;
         }
     }
@@ -158,20 +156,16 @@ final class Game {
     }
 
     private void finish() {
-        int stars = 0;
-        for (int t : mode.stars) if (score >= t) stars++;
-        String starText = "★".repeat(stars) + "☆".repeat(3 - stars);
         for (Player p : players) {
             p.showTitle(Title.title(
-                    Component.text(starText, GOLD),
-                    Component.text("영업 종료!  점수 " + score, NamedTextColor.WHITE),
+                    Component.text("영업 종료!", GOLD),
+                    Component.text("총 점수 " + score + "점", NamedTextColor.WHITE),
                     Title.Times.times(Duration.ofMillis(300), Duration.ofSeconds(5), Duration.ofSeconds(1))));
             p.sendMessage(Component.text("── 오늘의 영업 결과 (" + mode.label + ") ──", NamedTextColor.GOLD));
-            p.sendMessage(Component.text(" 점수: " + score + "   서빙: " + served + "   놓친 주문: " + missed, NamedTextColor.WHITE));
-            p.sendMessage(Component.text(" 별 기준: ★" + mode.stars[0] + " / ★★" + mode.stars[1] + " / ★★★" + mode.stars[2], NamedTextColor.GRAY));
+            p.sendMessage(Component.text(" 총 점수: " + score + "점   서빙: " + served + "접시   놓친 주문: " + missed, NamedTextColor.WHITE));
         }
         music.stop(players);
-        Jingle.play(players, stars > 0 ? Jingle.CLEAR : Jingle.FAIL);
+        Jingle.play(players, score > 0 ? Jingle.CLEAR : Jingle.FAIL);
         stop();
     }
 
@@ -210,7 +204,7 @@ final class Game {
         if (ticks % 2 == 0) tickHover();
         music.tick(players, timeLeft <= 30 * 20);
         if (timeLeft == 30 * 20) {
-            flash("30초 남았어요! 서둘러요!", NamedTextColor.RED);
+            flash("30초 남았어요! 서둘러요!", BAD);
             playAll(Sound.BLOCK_BELL_USE, 1f, 1.2f);
         }
         if (timeLeft <= 10 * 20 && timeLeft % 20 == 0) playAll(Sound.BLOCK_NOTE_BLOCK_HAT, 1f, 2f);
@@ -224,9 +218,8 @@ final class Game {
             Order o = it.next();
             if (--o.left()[0] <= 0) {
                 it.remove();
-                score = Math.max(0, score - 10);
                 missed++;
-                flash(o.recipe().name + " 주문을 놓쳤어요… -10", NamedTextColor.RED);
+                flash(o.recipe().name + " 주문을 놓쳤어요…", BAD);
                 playAll(Sound.ENTITY_ITEM_BREAK, 1f, 0.8f);
             }
         }
@@ -381,7 +374,7 @@ final class Game {
                     setHand(p, Items.plate(Set.of()));
                     good(p, Sound.BLOCK_DECORATED_POT_INSERT);
                 } else if (hand == null) {
-                    flash("깨끗한 접시가 없어요! 설거지를 해 주세요", NamedTextColor.RED);
+                    flash("깨끗한 접시가 없어요! 설거지를 해 주세요", BAD);
                     bad(p);
                 } else if (Items.isPlate(hand) && Items.contents(hand).isEmpty()) {
                     s.count++;
@@ -573,8 +566,7 @@ final class Game {
     private void serve(Player p, Station s, Set<String> contents) {
         for (Order o : orders) {
             if (o.recipe().contents.equals(contents)) {
-                int tip = Math.round(8f * o.left()[0] / o.total());
-                score += o.recipe().points + tip;
+                score += o.recipe().points;
                 served++;
                 orders.remove(o);
                 setHand(p, null);
@@ -583,11 +575,11 @@ final class Game {
                 fx.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, fx, 12, 0.3, 0.3, 0.3, 0);
                 playAll(Sound.ENTITY_PLAYER_LEVELUP, 0.6f, 1.6f);
                 playAll(Sound.BLOCK_NOTE_BLOCK_CHIME, 1f, 1.5f);
-                flash(o.recipe().name + " 완료! +" + o.recipe().points + "  팁 +" + tip, TextColor.color(0x7CFF6A));
+                flash(o.recipe().name + " 완료!  +" + o.recipe().points + "점", GOOD);
                 return;
             }
         }
-        flash("주문에 없는 요리예요", NamedTextColor.RED);
+        flash("주문에 없는 요리예요", BAD);
         bad(p);
     }
 
@@ -595,12 +587,14 @@ final class Game {
 
     static final TextColor INK = TextColor.color(0x4A3426), INK_SOFT = TextColor.color(0x8A6A50);
     static final TextColor PIP_OFF = TextColor.color(0xD9C9A8);
+    /** Message colours, dark enough to read on the cream notice card. */
+    static final TextColor GOOD = TextColor.color(0x2E8B2E), BAD = TextColor.color(0xC0392B);
 
     private String flashText = "";
-    private TextColor flashColor = NamedTextColor.WHITE;
+    private TextColor flashColor = INK;
     private int flashUntil;
 
-    /** Short message shown in the middle of the bottom HUD for a couple of seconds. */
+    /** Short notice shown on a card in the top-right corner for a couple of seconds. */
     private void flash(String text, TextColor color) {
         flashText = text;
         flashColor = color;
@@ -612,11 +606,18 @@ final class Game {
         if (bars.isEmpty()) return;
         float left = -guiWidth / 2f + 6, right = guiWidth / 2f - 6;
 
-        // Order tickets, top-left: cream cards with the dish, its ingredients and a patience bar.
+        // Order tickets top-left (cream cards with the dish, its ingredients and a patience bar);
+        // the first row also carries the current notice, right-aligned in the top-right corner.
         for (int i = 0; i < MAX_ORDERS; i++) {
             BossBar bar = bars.get(i);
+            Glyphs.Overlay row = new Glyphs.Overlay();
+            if (i == 0 && ticks < flashUntil) {
+                Glyphs.Line msg = new Glyphs.Line().text(flashText, flashColor);
+                Glyphs.Line notice = Glyphs.Line.panel("card", msg.width() + 8);
+                row.at(right - notice.width(), notice).at(right - notice.width() + 6, msg);
+            }
             if (i >= orders.size()) {
-                bar.name(Component.empty());
+                bar.name(row.build());
                 continue;
             }
             Order o = orders.get(i);
@@ -632,27 +633,28 @@ final class Game {
             int pips = 8, full = (int) Math.ceil(frac * pips);
             for (int k = 0; k < pips; k++) line.icon("pip", k < full ? c : PIP_OFF);
             Glyphs.Line card = Glyphs.Line.panel("card", line.width() + 8);
-            bar.name(new Glyphs.Overlay().at(left, card).at(left + 6, line).build());
+            bar.name(row.at(left, card).at(left + 6, line).build());
         }
 
-        // Bottom bar: score and clean plates on the left, big timer on the right, messages in the middle.
+        // Action bar: clean plates on the left, the current score in the middle, the big timer on the right.
         int secs = Math.max(0, (timeLeft + 19) / 20);
         int clean = 0;
         for (Station s : kitchen.stations) if (s.kind == Station.Kind.PLATES) clean += s.count;
+        Glyphs.Line plateLine = new Glyphs.Line().icon("big_plate").gap(4)
+                .digits(String.valueOf(clean), clean == 0 ? TextColor.color(0xFF6A5A) : NamedTextColor.WHITE);
+        Glyphs.Line platePanel = Glyphs.Line.panel("nav", plateLine.width() + 10);
         Glyphs.Line scoreLine = new Glyphs.Line().icon("big_coin").gap(4).digits(String.valueOf(score), GOLD)
-                .gap(10).icon("big_plate").gap(4).digits(String.valueOf(clean), clean == 0 ? TextColor.color(0xFF6A5A) : NamedTextColor.WHITE);
+                .gap(3).text("점", GOLD);
         Glyphs.Line scorePanel = Glyphs.Line.panel("nav", scoreLine.width() + 10);
         TextColor timeColor = secs <= 30 && secs % 2 == 0 ? TextColor.color(0xFF6A5A) : NamedTextColor.WHITE;
         Glyphs.Line timeLine = new Glyphs.Line().icon("big_clock").gap(4).digits(String.format("%d:%02d", secs / 60, secs % 60), timeColor);
         Glyphs.Line timePanel = Glyphs.Line.panel("nav", timeLine.width() + 10);
-        Glyphs.Overlay bottom = new Glyphs.Overlay()
-                .at(left, scorePanel).at(left + 7, scoreLine)
-                .at(right - timePanel.width(), timePanel).at(right - timePanel.width() + 7, timeLine);
-        if (ticks < flashUntil) {
-            Glyphs.Line msg = new Glyphs.Line().text(flashText, flashColor);
-            bottom.at(-msg.width() / 2, msg);
-        }
-        Component bar = bottom.build();
+        float mid = -scorePanel.width() / 2;
+        Component bar = new Glyphs.Overlay()
+                .at(left, platePanel).at(left + 7, plateLine)
+                .at(mid, scorePanel).at(mid + 7, scoreLine)
+                .at(right - timePanel.width(), timePanel).at(right - timePanel.width() + 7, timeLine)
+                .build();
         players.forEach(p -> p.sendActionBar(bar));
     }
 
