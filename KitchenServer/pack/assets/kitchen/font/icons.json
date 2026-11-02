@@ -1,0 +1,301 @@
+{
+ "providers": [
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/tomato.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/tomato_chopped.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue001"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/lettuce.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue002"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/lettuce_chopped.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue003"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/meat.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue004"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/patty_raw.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue005"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/patty_cooked.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue006"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/burnt.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue007"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/bread.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue008"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/plate.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue009"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/plate_salad.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue00a"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/plate_bread.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue00b"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/plate_patty.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue00c"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/plate_burger.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue00d"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/plate_soup.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue00e"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/soup.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue00f"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/pan.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue010"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/fish.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue011"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/fish_chopped.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue012"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/fish_fried.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue013"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/potato.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue014"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/potato_chopped.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue015"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/fries.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue016"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/dirty_plate.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue017"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/plate_tomato.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue018"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/plate_fish.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue019"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/plate_fries.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue01a"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/plate_fishfries.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue01b"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/plate_special.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue01c"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/plate_fishset.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue01d"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:font/clock.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue01e"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:font/coin.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue01f"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:font/pip.png",
+   "height": 7,
+   "ascent": 7,
+   "chars": [
+    "\ue020"
+   ]
+  }
+ ]
+}

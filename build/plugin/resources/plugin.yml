@@ -1,0 +1,14 @@
+name: KitchenRush
+version: 1.0.0
+main: kitchenrush.KitchenRush
+api-version: '26.3'
+description: Single-player co-op-style cooking minigame (original)
+commands:
+  cook:
+    description: Kitchen Rush minigame
+    usage: /cook <solo|duo <player>|stop|hud>
+    permission: kitchenrush.admin
+permissions:
+  kitchenrush.admin:
+    description: Start and stop the kitchen
+    default: op

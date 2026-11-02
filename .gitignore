@@ -1,0 +1,15 @@
+/*
+!/.gitignore
+!/README.md
+!/build/
+!/KitchenServer/
+
+/build/out/
+/build/KitchenRush.jar
+/build/plugin/resources/kitchen-pack.zip
+/build/plugin/resources/preview.png
+
+/KitchenServer/*
+!/KitchenServer/pack/
+!/KitchenServer/start.bat
+!/KitchenServer/server.properties

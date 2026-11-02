@@ -1,0 +1,5 @@
+# Round length in seconds
+round-seconds: 180
+# GUI-scaled screen width used to pin the HUD to the top-left corner.
+# 1920x1080 with GUI scale Auto(4) = 480, scale 3 = 640, scale 2 = 960. Change in game with /cook hud <width>.
+hud-gui-width: 480
