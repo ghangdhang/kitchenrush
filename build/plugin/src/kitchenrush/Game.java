@@ -293,7 +293,10 @@ final class Game {
                 if (Items.isPlate(s.item)) return Items.describePlate(Items.contents(s.item));
                 String t = Items.type(s.item);
                 List<String> lines = new ArrayList<>();
-                lines.add(Items.name(t));
+                int cooked = s.kind == Station.Kind.PAN || s.kind == Station.Kind.FRYER ? s.cook : Items.cook(s.item);
+                int full = "patty_raw".equals(t) ? PAN_COOK : FRY_COOK;
+                boolean raw = "patty_raw".equals(t) || Items.FRIES.containsKey(t);
+                lines.add(Items.name(t) + (raw && cooked > 0 ? " (익힘 " + Math.min(99, cooked * 100 / full) + "%)" : ""));
                 if (Items.CHOPS.containsKey(t)) lines.add("→ 도마에서 썰면: " + Items.name(Items.CHOPS.get(t)));
                 else if ("patty_raw".equals(t)) lines.add("→ 프라이팬에 구우면: " + Items.name("patty_cooked"));
                 else if (Items.FRIES.containsKey(t)) lines.add("→ 튀김기에 넣으면: " + Items.name(Items.FRIES.get(t)));
@@ -537,7 +540,9 @@ final class Game {
                 bad(p);
                 return;
             }
-            setHand(p, s.item);
+            // Half-cooked food keeps how far it got, so putting it back on continues instead of restarting.
+            boolean stillCooking = pan ? "patty_raw".equals(Items.type(s.item)) : Items.FRIES.containsKey(Items.type(s.item));
+            setHand(p, stillCooking ? Items.withCook(s.item, s.cook) : s.item);
             s.setItem(null);
             s.cook = 0;
             s.hideBar();
@@ -548,7 +553,7 @@ final class Game {
             boolean ok = pan ? "patty_raw".equals(ht) : Items.FRIES.containsKey(ht);
             if (ok) {
                 s.setItem(hand);
-                s.cook = 0;
+                s.cook = Items.cook(hand);
                 setHand(p, null);
                 good(p, pan ? Sound.BLOCK_FIRE_AMBIENT : Sound.BLOCK_LAVA_POP);
             } else bad(p);

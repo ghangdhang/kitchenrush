@@ -114,66 +114,66 @@ class Track:
         return out / np.max(np.abs(out)) * peak
 
 
-# ---------------------------------------------------------------- the kitchen tune (16 bars)
-CHORDS = ['C', 'Am', 'F', 'G', 'C', 'Em', 'FG', 'C', 'F', 'G', 'Em', 'Am', 'Dm', 'G', 'C', 'G']
-ROOT = {'C': 36, 'Am': 45, 'F': 41, 'G': 43, 'Em': 40, 'Dm': 38}
-TRIAD = {'C': [60, 64, 67], 'Am': [57, 60, 64], 'F': [57, 60, 65], 'G': [55, 59, 62],
-         'Em': [55, 59, 64], 'Dm': [57, 62, 65]}
-# (beat in bar, length in beats, midi note)
+# ---------------------------------------------------------------- the kitchen tune
+# The first Kitchen Rush melody (originally played on note blocks): 8 bars of eighth notes.
+# Values are note-block pitch steps (6 = C5 ... 22 = E6, i.e. midi 66 + step); -1 is a rest.
 MELODY = [
-    [(0, .5, 76), (.5, .5, 79), (1, 1, 84), (2, .5, 79), (2.5, .5, 76), (3, 1, 74)],
-    [(0, .5, 72), (.5, .5, 76), (1, 1, 81), (2, .5, 79), (2.5, .5, 76), (3, 1, 72)],
-    [(0, .5, 77), (.5, .5, 81), (1, .5, 84), (1.5, .5, 81), (2, 1, 79), (3, 1, 77)],
-    [(0, 1.5, 79), (1.5, .5, 77), (2, .5, 76), (2.5, .5, 74), (3, 1, 71)],
-    [(0, .5, 72), (.5, .5, 76), (1, .5, 79), (1.5, .5, 84), (2, 1, 83), (3, 1, 79)],
-    [(0, .5, 76), (.5, .5, 79), (1, 1, 83), (2, .5, 79), (2.5, .5, 76), (3, 1, 71)],
-    [(0, .5, 77), (.5, .5, 81), (1, 1, 84), (2, .5, 79), (2.5, .5, 83), (3, 1, 86)],
-    [(0, 2, 84), (2.5, .5, 79), (3, .5, 76), (3.5, .5, 79)],
-    [(0, .5, 81), (.5, .5, 81), (1, .5, 77), (1.5, .5, 81), (2, 1, 84), (3, 1, 81)],
-    [(0, .5, 83), (.5, .5, 83), (1, .5, 79), (1.5, .5, 83), (2, 1, 86), (3, 1, 83)],
-    [(0, 1, 79), (1, .5, 76), (1.5, .5, 79), (2, 1, 83), (3, 1, 79)],
-    [(0, 1, 81), (1, .5, 76), (1.5, .5, 72), (2, 1.5, 76), (3.5, .5, 74)],
-    [(0, .5, 74), (.5, .5, 77), (1, 1, 81), (2, .5, 77), (2.5, .5, 74), (3, 1, 77)],
-    [(0, .5, 79), (.5, .5, 83), (1, 1, 86), (2, .5, 83), (2.5, .5, 79), (3, 1, 77)],
-    [(0, .5, 76), (.5, .5, 79), (1, .5, 84), (1.5, .5, 79), (2, .5, 76), (2.5, .5, 79), (3, 1, 84)],
-    [(0, 1, 83), (1, 1, 79), (2, 1, 74), (3, .5, 71), (3.5, .5, 74)],
+    10, 13, 18, 13, 15, 13, 10, -1,
+    11, 15, 20, 15, 13, 11, 10, 8,
+    10, 13, 18, 22, 20, 18, 15, 13,
+    11, 10, 8, 10, 6, -1, -1, -1,
+    15, 15, 13, 15, 18, -1, 15, 13,
+    11, 11, 10, 11, 15, -1, 13, 11,
+    10, 13, 18, 20, 22, 20, 18, 15,
+    13, -1, 20, -1, 18, -1, -1, -1,
 ]
+# Chord per bar; the last bar turns G -> C halfway.
+CHORDS = ['C', 'F', 'C', 'G', 'Am', 'F', 'C', 'GC']
+ROOT = {'C': 36, 'F': 41, 'G': 43, 'Am': 45}
+TRIAD = {'C': [60, 64, 67], 'Am': [57, 60, 64], 'F': [57, 60, 65], 'G': [55, 59, 62]}
 
 
-def kitchen_tune(beat, hurry=False):
+def kitchen_tune(beat, hurry=False, passes=2):
+    """The melody twice per loop (the second pass adds a glockenspiel sparkle), over bass, marimba and drums."""
+    e = beat / 2
     bars = len(CHORDS)
-    tr = Track(bars * 4 * beat)
-    for b, chord in enumerate(CHORDS):
-        t0 = b * 4 * beat
-        halves = ['F', 'G'] if chord == 'FG' else [chord]
-        for h, ch in enumerate(halves):
-            span = 4 / len(halves)
-            start = t0 + h * span * beat
-            root = ROOT[ch]
-            # bouncy bass: root, octave, fifth, octave
-            pattern = [(0, root), (1, root + 12), (2, root + 7), (3, root + 12)] if span == 4 else [(0, root), (1, root + 7)]
-            for beat_i, m in pattern:
-                tr.add(start + beat_i * beat, bass(m, beat * 0.8, 0.55))
-            # off-beat marimba chord "chicks"
-            for k in range(int(span)):
-                for m in TRIAD[ch]:
-                    tr.add(start + (k + 0.5) * beat, marimba(m, beat * 0.4, 0.13))
-        # drums
-        for k in range(4):
-            if k % 2 == 0:
-                tr.add(t0 + k * beat, kick(0.7))
-            else:
-                tr.add(t0 + k * beat, snare(0.32))
-            tr.add(t0 + (k + 0.5) * beat, hat(0.16))
-            tr.add(t0 + k * beat, hat(0.08))
-            if hurry:
-                tr.add(t0 + (k + 0.25) * beat, shaker(0.07))
-                tr.add(t0 + (k + 0.75) * beat, shaker(0.07))
-        # melody: soft lead doubled by marimba an octave up on the downbeats
-        for at, length, m in MELODY[b]:
-            s = t0 + at * beat
-            tr.add(s, soft_lead(m, length * beat * 0.92, 0.42))
-            tr.add(s, marimba(m + 12, length * beat, 0.22 if at == int(at) else 0.12))
+    tr = Track(passes * bars * 4 * beat)
+    for rep in range(passes):
+        base = rep * bars * 4 * beat
+        for b, chord in enumerate(CHORDS):
+            t0 = base + b * 4 * beat
+            halves = ['G', 'C'] if chord == 'GC' else [chord]
+            for h, ch in enumerate(halves):
+                span = 4 // len(halves)
+                start = t0 + h * span * beat
+                root = ROOT[ch]
+                pattern = [(0, root), (1, root + 12), (2, root + 7), (3, root + 12)] if span == 4 \
+                    else [(0, root), (1, root + 7)]
+                for beat_i, m in pattern:
+                    tr.add(start + beat_i * beat, bass(m, beat * 0.8, 0.55))
+                for k in range(span):
+                    for m in TRIAD[ch]:
+                        tr.add(start + (k + 0.5) * beat, marimba(m, beat * 0.4, 0.13))
+            for k in range(4):
+                tr.add(t0 + k * beat, kick(0.7) if k % 2 == 0 else snare(0.32))
+                tr.add(t0 + (k + 0.5) * beat, hat(0.16))
+                tr.add(t0 + k * beat, hat(0.08))
+                if hurry:
+                    tr.add(t0 + (k + 0.25) * beat, shaker(0.07))
+                    tr.add(t0 + (k + 0.75) * beat, shaker(0.07))
+            for i in range(8):
+                step = MELODY[b * 8 + i]
+                if step < 0:
+                    continue
+                length = 1
+                while i + length < 8 and MELODY[b * 8 + i + length] < 0 and length < 3:
+                    length += 1
+                m = 66 + step
+                s = t0 + i * e
+                tr.add(s, soft_lead(m, length * e * 0.9, 0.42))
+                tr.add(s, marimba(m + 12, length * e, 0.2 if i % 2 == 0 else 0.11))
+                if rep == 1 and i % 2 == 0:
+                    tr.add(s, glock(m + 12, 0.4, 0.09))
     return tr
 
 
@@ -241,9 +241,10 @@ def write(name, data):
 
 os.makedirs(OUT, exist_ok=True)
 lengths = {}
-# Beats chosen so a loop is a whole number of game ticks: 0.45 s -> 576 ticks, 0.375 s -> 480 ticks.
-lengths['bgm'] = write('music/bgm', kitchen_tune(0.45).render(loop=True, peak=0.8))
-lengths['bgm_hurry'] = write('music/bgm_hurry', kitchen_tune(0.375, hurry=True).render(loop=True, peak=0.8))
+# Same tempos as the original note-block version (an eighth note = 4 ticks, 3 ticks when hurrying),
+# so each loop is a whole number of game ticks: 0.4 s beats -> 512 ticks, 0.3 s beats -> 384 ticks.
+lengths['bgm'] = write('music/bgm', kitchen_tune(0.4).render(loop=True, peak=0.8))
+lengths['bgm_hurry'] = write('music/bgm_hurry', kitchen_tune(0.3, hurry=True).render(loop=True, peak=0.8))
 lengths['start'] = write('sfx/start', jingle_start().render(loop=False))
 lengths['clear'] = write('sfx/clear', jingle_clear().render(loop=False))
 lengths['fail'] = write('sfx/fail', jingle_fail().render(loop=False))

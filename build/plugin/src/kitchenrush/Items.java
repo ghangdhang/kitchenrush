@@ -75,11 +75,28 @@ final class Items {
             Map.entry("plate_salad", Set.of("lettuce_chopped")),
             Map.entry("plate_tomato", Set.of("tomato_chopped")));
 
-    private static NamespacedKey typeKey, plateKey;
+    private static NamespacedKey typeKey, plateKey, cookKey;
 
     static void init(Plugin plugin) {
         typeKey = new NamespacedKey(plugin, "type");
         plateKey = new NamespacedKey(plugin, "plate");
+        cookKey = new NamespacedKey(plugin, "cook");
+    }
+
+    /** Ticks of cooking/frying an ingredient has had so far, kept on the item when it is taken off the heat. */
+    static int cook(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return 0;
+        Integer v = item.getItemMeta().getPersistentDataContainer().get(cookKey, PersistentDataType.INTEGER);
+        return v == null ? 0 : v;
+    }
+
+    static ItemStack withCook(ItemStack item, int ticks) {
+        ItemStack copy = item.clone();
+        ItemMeta meta = copy.getItemMeta();
+        if (ticks > 0) meta.getPersistentDataContainer().set(cookKey, PersistentDataType.INTEGER, ticks);
+        else meta.getPersistentDataContainer().remove(cookKey);
+        copy.setItemMeta(meta);
+        return copy;
     }
 
     static ItemStack of(String type) {
