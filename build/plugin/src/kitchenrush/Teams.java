@@ -90,15 +90,28 @@ final class Teams {
         return t;
     }
 
-    /** Puts a newcomer into the currently smallest of the teams in play. */
+    /**
+     * Puts a newcomer into the team with the fewest people actually present (online players and dummies
+     * that still exist), picking at random among teams tied for smallest.
+     */
     Team joinSmallest(Entity e) {
+        members.keySet().removeIf(id -> Bukkit.getEntity(id) == null && !id.equals(e.getUniqueId()));
         List<Team> active = activeTeams();
         if (active.isEmpty() || members.containsKey(e.getUniqueId())) return members.get(e.getUniqueId());
-        Team best = active.get(0);
-        for (Team t : active) if (membersOf(t).size() < membersOf(best).size()) best = t;
-        members.put(e.getUniqueId(), best);
+        int fewest = Integer.MAX_VALUE;
+        List<Team> smallest = new ArrayList<>();
+        for (Team t : active) {
+            int n = membersOf(t).size();
+            if (n < fewest) {
+                fewest = n;
+                smallest.clear();
+            }
+            if (n == fewest) smallest.add(t);
+        }
+        Team pick = smallest.get(new java.util.Random().nextInt(smallest.size()));
+        members.put(e.getUniqueId(), pick);
         apply(e);
-        return best;
+        return pick;
     }
 
     /** Shows the team prefix in the tab list, above the head and (via the chat renderer) in chat. */

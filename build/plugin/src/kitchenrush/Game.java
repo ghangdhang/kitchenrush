@@ -193,7 +193,24 @@ final class Game {
         phase = Phase.IDLE;
     }
 
+    /** Where cooks go once a round is over (set by the plugin to the lobby spawn). */
+    Location lobby;
+    static final int RETURN_DELAY = 60;
+
+    /** After the results have been on screen for a moment, sends everyone who played back to the lobby. */
+    private void sendHomeLater() {
+        if (lobby == null) return;
+        List<Player> who = List.copyOf(players);
+        Location to = lobby.clone();
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            for (Player p : who) {
+                if (p.isOnline()) p.teleport(to);
+            }
+        }, RETURN_DELAY);
+    }
+
     private void finish() {
+        sendHomeLater();
         if (match != null) {
             // The match announces the ranking (and plays the jingle) once every arena is done.
             served(served, missed);

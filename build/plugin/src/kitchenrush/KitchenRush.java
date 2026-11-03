@@ -79,6 +79,7 @@ public final class KitchenRush extends JavaPlugin implements Listener {
         Game g = new Game(this);
         g.roundSeconds = getConfig().getInt("round-seconds", 180);
         g.guiWidth = getConfig().getInt("hud-gui-width", 480);
+        g.lobby = lobby();
         return g;
     }
 
@@ -86,7 +87,18 @@ public final class KitchenRush extends JavaPlugin implements Listener {
         game.tick(world);
         if (match != null) {
             for (Game g : match.games) g.tick(world);
+            boolean wasOver = match.over();
             match.tick();
+            if (!wasOver && match.over()) {
+                // Dummies come back to the lobby with everyone else once the ranking is out.
+                Bukkit.getScheduler().runTaskLater(this, () -> {
+                    List<Entity> list = Dummies.all(world);
+                    for (int i = 0; i < list.size(); i++) {
+                        double a = 2 * Math.PI * i / list.size();
+                        list.get(i).teleport(lobby().clone().add(Math.cos(a) * 3, 0, Math.sin(a) * 3));
+                    }
+                }, Game.RETURN_DELAY);
+            }
         }
     }
 
