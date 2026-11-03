@@ -46,44 +46,55 @@ final class Kitchen {
             "C........C........C",
             "CCCCCCCCCCCCCCCCCCC",
     };
-    /**
-     * Team kitchen, about 2.5x the solo one (33 x 23) for 5-10 cooks. The north wall carries one set of
-     * crates, pans and fryers, the south wall a mirrored second set; boards and a sink with its drying rack
-     * sit on each side wall, and the centre island holds the plates and the dirty-plate return.
+    /*
+     * Team kitchen (33 x 23) for 5-10 cooks, split into two mirrored halves by a counter wall down the middle
+     * with a three-block walkway at its centre. Each half is a complete kitchen: crates, pans and fryers on
+     * its outer long wall, serving hatch, dirty-plate return, sink + rack and bin on its short wall, chopping
+     * boards on the inner tables and a plate stand on the island next to the walkway.
      */
+    static final int TEAM_W = 33, TEAM_D = 23, TEAM_MID = 16;
     static final String[] TEAM = teamLayout();
-    static final double[][] TEAM_SPAWNS = {
-            {16.5, 8.5}, {16.5, 14.5}, {6.5, 3.5}, {26.5, 3.5}, {6.5, 19.5}, {26.5, 19.5},
-            {4.5, 11.5}, {28.5, 11.5}, {13.5, 9.5}, {19.5, 13.5}};
+    static final double[][] TEAM_SPAWNS = teamSpawns();
 
     private static String[] teamLayout() {
-        int w = 33, d = 23;
+        int w = TEAM_W, d = TEAM_D;
         char[][] g = new char[d][w];
         for (int z = 0; z < d; z++) {
             for (int x = 0; x < w; x++) g[z][x] = (x == 0 || z == 0 || x == w - 1 || z == d - 1) ? 'C' : '.';
         }
-        String north = "LTMRFOCPPYY";
-        for (int i = 0; i < north.length(); i++) {
-            g[0][i] = north.charAt(i);
-            g[d - 1][w - 1 - i] = north.charAt(i);
-        }
-        for (int z : new int[]{3, 4, 5}) g[z][0] = 'B';
-        for (int z : new int[]{17, 18, 19}) g[z][w - 1] = 'B';
-        g[15][0] = 'W';
-        g[16][0] = 'Q';
-        g[11][0] = 'X';
-        g[5][w - 1] = 'W';
-        g[6][w - 1] = 'Q';
-        g[8][w - 1] = 'X';
-        for (int z : new int[]{10, 11, 12}) g[z][w - 1] = 'S';
-        int[][] islands = {{8, 6, 12, 7}, {20, 6, 24, 7}, {8, 15, 12, 16}, {20, 15, 24, 16}, {14, 10, 18, 12}};
-        for (int[] r : islands) {
+        // West half; the east half is its point mirror.
+        String wall = "LTMRFOCPPYY";
+        for (int i = 0; i < wall.length(); i++) g[0][i] = wall.charAt(i);
+        for (int z : new int[]{10, 11, 12}) g[z][0] = 'S';
+        g[13][0] = 'U';
+        g[16][0] = 'W';
+        g[17][0] = 'Q';
+        g[19][0] = 'X';
+        int[][] tables = {{4, 5, 9, 6}, {4, 15, 9, 16}, {9, 10, 12, 12}};
+        for (int[] r : tables) {
             for (int z = r[1]; z <= r[3]; z++) for (int x = r[0]; x <= r[2]; x++) g[z][x] = 'C';
         }
-        g[11][15] = 'D';
-        g[11][17] = 'U';
+        g[6][5] = 'B';
+        g[6][8] = 'B';
+        g[15][6] = 'B';
+        g[11][10] = 'D';
+        for (int z = 0; z < d; z++) {
+            for (int x = 0; x < TEAM_MID; x++) g[d - 1 - z][w - 1 - x] = g[z][x];
+        }
+        for (int z = 1; z < d - 1; z++) g[z][TEAM_MID] = (z >= 10 && z <= 12) ? '.' : 'C';
         String[] out = new String[d];
         for (int z = 0; z < d; z++) out[z] = new String(g[z]);
+        return out;
+    }
+
+    /** Five spots per half, alternating halves so a team's cooks start spread across both. */
+    private static double[][] teamSpawns() {
+        int[][] west = {{3, 8}, {3, 14}, {12, 4}, {12, 17}, {6, 11}};
+        double[][] out = new double[west.length * 2][];
+        for (int i = 0; i < west.length; i++) {
+            out[i * 2] = new double[]{west[i][0] + 0.5, west[i][1] + 0.5};
+            out[i * 2 + 1] = new double[]{TEAM_W - 1 - west[i][0] + 0.5, TEAM_D - 1 - west[i][1] + 0.5};
+        }
         return out;
     }
 
@@ -98,7 +109,23 @@ final class Kitchen {
     final List<Location> spawns = new ArrayList<>();
     final List<Station> stations = new ArrayList<>();
     private final Map<Long, Station> byBlock = new HashMap<>();
+    /** First plate stand / dirty-plate return; team kitchens have one of each per half. */
     Station plates, returns;
+    final List<Station> stands = new ArrayList<>(), returnList = new ArrayList<>();
+
+    /** The dirty-plate return closest to a serving hatch, so plates come back to the half they were served from. */
+    Station returnFor(Station serve) {
+        Station best = returns;
+        double bestD = Double.MAX_VALUE;
+        for (Station r : returnList) {
+            double dd = r.block.getLocation().distanceSquared(serve.block.getLocation());
+            if (dd < bestD) {
+                bestD = dd;
+                best = r;
+            }
+        }
+        return best;
+    }
 
     Kitchen(String name, World world, String[] layout, int ox, int oy, int oz, double[][] spawns) {
         this.name = name;
@@ -157,6 +184,8 @@ final class Kitchen {
         }
         clear();
         plates = returns = null;
+        stands.clear();
+        returnList.clear();
         for (int x = -HALL - 1; x <= w + HALL; x++) {
             for (int z = -HALL - 1; z <= d + HALL; z++) {
                 for (int y = -3; y <= 7; y++) set(x, y, z, Material.AIR);
@@ -204,13 +233,17 @@ final class Kitchen {
                 s = add(new Station(Station.Kind.PLATES, b, null));
                 s.addExtra(s.restItem(s.top(), Items.of("plate_cover"), Station.FOOD_SCALE));
                 s.label(c == 'D' ? "접시" : "건조대", 1.0, 0.5f);
-                if (c == 'D') plates = s;
+                if (c == 'D') {
+                    stands.add(s);
+                    if (plates == null) plates = s;
+                }
             }
             case 'U' -> {
                 b.setType(Material.SPRUCE_PLANKS, false);
                 s = add(new Station(Station.Kind.RETURN, b, null));
                 s.label("반납대", 1.0, 0.5f);
-                returns = s;
+                returnList.add(s);
+                if (returns == null) returns = s;
             }
             case 'W' -> {
                 b.setBlockData(Bukkit.createBlockData("minecraft:water_cauldron[level=3]"), false);

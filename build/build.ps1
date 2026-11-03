@@ -15,7 +15,8 @@ if (Test-Path $venvPy) {
 }
 py -I "$build\gen_pack.py" "$build\plugin\resources\kitchen-pack.zip" "$build\plugin\resources\glyphs.txt"
 
-$cp = (Get-ChildItem "$server\libraries" -Recurse -Filter *.jar | ForEach-Object FullName) -join ';'
+# Libraries plus the patched server jar (dummy tab-list rows use server packet classes).
+$cp = ((Get-ChildItem "$server\libraries" -Recurse -Filter *.jar | ForEach-Object FullName) + (Get-ChildItem "$server\versions" -Recurse -Filter 'paper-*.jar' | ForEach-Object FullName)) -join ';'
 $out = Join-Path $build 'out'
 if (Test-Path $out) { Remove-Item -Recurse -Force $out }
 New-Item -ItemType Directory $out | Out-Null

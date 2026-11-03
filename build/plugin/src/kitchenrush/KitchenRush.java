@@ -336,6 +336,7 @@ public final class KitchenRush extends JavaPlugin implements Listener {
         p.getInventory().clear();
         Game.setJump(p, true);
         teams.apply(p);
+        dummies.showTab(p);
         p.sendMessage(Component.text("주방 대소동에 오신 걸 환영해요! OP라면 /cook 으로 명령어를 확인하세요.", NamedTextColor.GOLD));
     }
 

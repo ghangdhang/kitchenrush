@@ -89,7 +89,7 @@ final class Teams {
         Scoreboard board = Bukkit.getScoreboardManager().getMainScoreboard();
         for (Team any : Team.values()) {
             org.bukkit.scoreboard.Team st = board.getTeam(any.scoreboardName());
-            if (st != null) st.removeEntry(entry(e));
+            if (st != null) entries(e).forEach(st::removeEntry);
         }
         if (t == null) {
             if (e instanceof Player p) p.playerListName(null);
@@ -101,7 +101,7 @@ final class Teams {
             st = board.registerNewTeam(t.scoreboardName());
             st.prefix(t.prefix());
         }
-        st.addEntry(entry(e));
+        entries(e).forEach(st::addEntry);
         if (e instanceof Player p) p.playerListName(t.prefix().append(Component.text(p.getName())));
         if (e instanceof Mannequin m) {
             m.customName(t.prefix().append(Component.text(nameOf(m))));
@@ -123,8 +123,12 @@ final class Teams {
         }
     }
 
-    private static String entry(Entity e) {
-        return e instanceof Player p ? p.getName() : e.getUniqueId().toString();
+    /**
+     * Scoreboard entries for an entity: a player's name, or for a dummy both its uuid (name tag above the
+     * mannequin) and its display name (its tab-list row, which is a player entry with that name).
+     */
+    private static List<String> entries(Entity e) {
+        return e instanceof Player p ? List.of(p.getName()) : List.of(e.getUniqueId().toString(), nameOf(e));
     }
 
     static String nameOf(Entity e) {

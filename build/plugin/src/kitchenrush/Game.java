@@ -33,7 +33,7 @@ final class Game {
         SOLO("1인", 18, 3, 0),
         DUO("다인", 13, 3, 0),
         /** One team's arena in a /letscook match: bigger crew, more plates, fixed 5 minutes. */
-        TEAM("팀전", 8, 5, 300);
+        TEAM("팀전", 8, 6, 300);
 
         final String label;
         final int orderEvery, plates, seconds;
@@ -57,7 +57,11 @@ final class Game {
     private final Random rnd = new Random();
     private final List<Order> orders = new ArrayList<>();
     private final List<BossBar> bars = new ArrayList<>();
-    private final List<int[]> dirtyComing = new ArrayList<>();
+    /** A served plate on its way back (dirty) to the return counter of the half it was served from. */
+    private record Dirty(int[] left, Station to) {
+    }
+
+    private final List<Dirty> dirtyComing = new ArrayList<>();
     private final Map<UUID, Integer> lastHit = new HashMap<>();
     private final List<Player> players = new ArrayList<>();
     private final Map<UUID, Station> hovering = new HashMap<>();
@@ -133,13 +137,15 @@ final class Game {
         }
         for (Station s : kitchen.stations) {
             if (s.kind == Station.Kind.PLATES) {
-                s.count = s == kitchen.plates ? mode.plates : 0;
+                s.count = kitchen.stands.contains(s) ? mode.plates / kitchen.stands.size() : 0;
                 s.showStack("plate", 0.0);
             }
         }
         hovering.clear();
-        kitchen.returns.count = 0;
-        kitchen.returns.showStack("dirty_plate", 0.0);
+        for (Station r : kitchen.returnList) {
+            r.count = 0;
+            r.showStack("dirty_plate", 0.0);
+        }
         orders.clear();
         dirtyComing.clear();
         score = served = missed = ticks = 0;
@@ -260,14 +266,14 @@ final class Game {
 
     /** Served plates come back dirty to the return counter a few seconds later. */
     private void tickDishes() {
-        Iterator<int[]> it = dirtyComing.iterator();
+        Iterator<Dirty> it = dirtyComing.iterator();
         while (it.hasNext()) {
-            int[] t = it.next();
-            if (--t[0] <= 0) {
+            Dirty t = it.next();
+            if (--t.left()[0] <= 0) {
                 it.remove();
-                kitchen.returns.count++;
-                kitchen.returns.showStack("dirty_plate", 0.0);
-                sound(kitchen.returns.top(), Sound.BLOCK_DECORATED_POT_INSERT, 0.8f, 0.8f);
+                t.to().count++;
+                t.to().showStack("dirty_plate", 0.0);
+                sound(t.to().top(), Sound.BLOCK_DECORATED_POT_INSERT, 0.8f, 0.8f);
             }
         }
     }
@@ -298,7 +304,7 @@ final class Game {
     private List<String> describe(Station s) {
         switch (s.kind) {
             case PLATES -> {
-                return List.of((s == kitchen.plates ? "접시대" : "건조대") + ": 깨끗한 접시 " + s.count + "개");
+                return List.of((kitchen.stands.contains(s) ? "접시대" : "건조대") + ": 깨끗한 접시 " + s.count + "개");
             }
             case RETURN -> {
                 return List.of("반납대: 더러운 접시 " + s.count + "개", "싱크대로 가져가 설거지하세요");
@@ -599,7 +605,7 @@ final class Game {
                 served++;
                 orders.remove(o);
                 setHand(p, null);
-                dirtyComing.add(new int[]{DIRTY_DELAY});
+                dirtyComing.add(new Dirty(new int[]{DIRTY_DELAY}, kitchen.returnFor(s)));
                 Location fx = s.top().add(0, 0.5, 0);
                 fx.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, fx, 12, 0.3, 0.3, 0.3, 0);
                 playAll(Sound.ENTITY_PLAYER_LEVELUP, 0.6f, 1.6f);
