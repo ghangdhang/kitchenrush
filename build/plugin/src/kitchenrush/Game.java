@@ -30,19 +30,23 @@ final class Game {
     enum Phase { IDLE, COUNTDOWN, RUNNING }
 
     enum Mode {
-        SOLO("1인", 18),
-        DUO("다인", 13);
+        SOLO("1인", 18, 3, 0),
+        DUO("다인", 13, 3, 0),
+        /** One team's arena in a /letscook match: bigger crew, more plates, fixed 5 minutes. */
+        TEAM("팀전", 8, 5, 300);
 
         final String label;
-        final int orderEvery;
+        final int orderEvery, plates, seconds;
 
-        Mode(String label, int orderEvery) {
+        Mode(String label, int orderEvery, int plates, int seconds) {
             this.label = label;
             this.orderEvery = orderEvery;
+            this.plates = plates;
+            this.seconds = seconds;
         }
     }
 
-    static final int MAX_ORDERS = 4, CHOPS = 6, WASHES = 6, PLATES = 3, DIRTY_DELAY = 7 * 20;
+    static final int MAX_ORDERS = 4, CHOPS = 6, WASHES = 6, DIRTY_DELAY = 7 * 20;
     static final int PAN_COOK = 120, PAN_BURN = 200, FRY_COOK = 140, FRY_BURN = 220;
     static final TextColor GOLD = TextColor.color(0xFFD84A);
 
@@ -81,6 +85,24 @@ final class Game {
         return kitchen;
     }
 
+    int score() {
+        return score;
+    }
+
+    boolean active() {
+        return phase != Phase.IDLE;
+    }
+
+    /** Set for team arenas: the match shows every team's score and announces the winner at the end. */
+    Match match;
+    Teams.Team team;
+    int finalServed, finalMissed;
+
+    private void served(int served, int missed) {
+        finalServed = served;
+        finalMissed = missed;
+    }
+
     static final double DEFAULT_JUMP = 0.41999998688697815;
 
     /** Jumping is off during a round so nobody hops over counters; the kitchens have walk-through gaps instead. */
@@ -111,7 +133,7 @@ final class Game {
         }
         for (Station s : kitchen.stations) {
             if (s.kind == Station.Kind.PLATES) {
-                s.count = s == kitchen.plates ? PLATES : 0;
+                s.count = s == kitchen.plates ? mode.plates : 0;
                 s.showStack("plate", 0.0);
             }
         }
@@ -121,7 +143,7 @@ final class Game {
         orders.clear();
         dirtyComing.clear();
         score = served = missed = ticks = 0;
-        timeLeft = roundSeconds * 20;
+        timeLeft = (mode.seconds > 0 ? mode.seconds : roundSeconds) * 20;
         phase = Phase.COUNTDOWN;
         flashUntil = 0;
         for (int i = 0; i < MAX_ORDERS; i++) {
@@ -156,6 +178,13 @@ final class Game {
     }
 
     private void finish() {
+        if (match != null) {
+            // The match announces the ranking (and plays the jingle) once every arena is done.
+            served(served, missed);
+            music.stop(players);
+            stop();
+            return;
+        }
         for (Player p : players) {
             p.showTitle(Title.title(
                     Component.text("영업 종료!", GOLD),
@@ -636,22 +665,25 @@ final class Game {
             bar.name(row.at(left, card).at(left + 6, line).build());
         }
 
-        // Action bar: clean plates on the left, the current score in the middle, the big timer on the right.
+        // Action bar: the score in the middle (every team's score in a match), the big timer on the right.
         int secs = Math.max(0, (timeLeft + 19) / 20);
-        int clean = 0;
-        for (Station s : kitchen.stations) if (s.kind == Station.Kind.PLATES) clean += s.count;
-        Glyphs.Line plateLine = new Glyphs.Line().icon("big_plate").gap(4)
-                .digits(String.valueOf(clean), clean == 0 ? TextColor.color(0xFF6A5A) : NamedTextColor.WHITE);
-        Glyphs.Line platePanel = Glyphs.Line.panel("nav", plateLine.width() + 10);
-        Glyphs.Line scoreLine = new Glyphs.Line().icon("big_coin").gap(4).digits(String.valueOf(score), GOLD)
-                .gap(3).text("점", GOLD);
+        Glyphs.Line scoreLine = new Glyphs.Line();
+        if (match == null) {
+            scoreLine.icon("big_coin").gap(4).digits(String.valueOf(score), GOLD).gap(3).text("점", GOLD);
+        } else {
+            boolean first = true;
+            for (Game g : match.games) {
+                if (!first) scoreLine.gap(12);
+                first = false;
+                scoreLine.text(g.team.label + " ", g.team.color).digits(String.valueOf(g.score), g.team.color);
+            }
+        }
         Glyphs.Line scorePanel = Glyphs.Line.panel("nav", scoreLine.width() + 10);
         TextColor timeColor = secs <= 30 && secs % 2 == 0 ? TextColor.color(0xFF6A5A) : NamedTextColor.WHITE;
         Glyphs.Line timeLine = new Glyphs.Line().icon("big_clock").gap(4).digits(String.format("%d:%02d", secs / 60, secs % 60), timeColor);
         Glyphs.Line timePanel = Glyphs.Line.panel("nav", timeLine.width() + 10);
         float mid = -scorePanel.width() / 2;
         Component bar = new Glyphs.Overlay()
-                .at(left, platePanel).at(left + 7, plateLine)
                 .at(mid, scorePanel).at(mid + 7, scoreLine)
                 .at(right - timePanel.width(), timePanel).at(right - timePanel.width() + 7, timeLine)
                 .build();

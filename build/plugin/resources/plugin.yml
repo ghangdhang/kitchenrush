@@ -2,13 +2,31 @@ name: KitchenRush
 version: 1.0.0
 main: kitchenrush.KitchenRush
 api-version: '26.3'
-description: Single-player co-op-style cooking minigame (original)
+description: Co-op cooking minigame (original)
 commands:
   cook:
     description: Kitchen Rush minigame
-    usage: /cook <solo|duo <player>|stop|hud>
+    usage: /cook <solo|duo <player...>|stop|hud>
+    permission: kitchenrush.admin
+  팀분배:
+    description: Split everyone into 2-4 teams (도/개/걸/윷)
+    usage: /팀분배 <2|3|4>
+    aliases: [teamsplit]
+    permission: kitchenrush.admin
+  전체초기화:
+    description: Stop every game, clear teams and remove dummies
+    usage: /전체초기화
+    aliases: [resetall]
+    permission: kitchenrush.admin
+  letscook:
+    description: Start the team match, one arena per team
+    usage: /letscook
+    permission: kitchenrush.admin
+  fp:
+    description: Spawn dummy players with your skin for testing
+    usage: /fp player <count>
     permission: kitchenrush.admin
 permissions:
   kitchenrush.admin:
-    description: Start and stop the kitchen
+    description: Run the kitchen
     default: op

@@ -46,6 +46,47 @@ final class Kitchen {
             "C........C........C",
             "CCCCCCCCCCCCCCCCCCC",
     };
+    /**
+     * Team kitchen, about 2.5x the solo one (33 x 23) for 5-10 cooks. The north wall carries one set of
+     * crates, pans and fryers, the south wall a mirrored second set; boards and a sink with its drying rack
+     * sit on each side wall, and the centre island holds the plates and the dirty-plate return.
+     */
+    static final String[] TEAM = teamLayout();
+    static final double[][] TEAM_SPAWNS = {
+            {16.5, 8.5}, {16.5, 14.5}, {6.5, 3.5}, {26.5, 3.5}, {6.5, 19.5}, {26.5, 19.5},
+            {4.5, 11.5}, {28.5, 11.5}, {13.5, 9.5}, {19.5, 13.5}};
+
+    private static String[] teamLayout() {
+        int w = 33, d = 23;
+        char[][] g = new char[d][w];
+        for (int z = 0; z < d; z++) {
+            for (int x = 0; x < w; x++) g[z][x] = (x == 0 || z == 0 || x == w - 1 || z == d - 1) ? 'C' : '.';
+        }
+        String north = "LTMRFOCPPYY";
+        for (int i = 0; i < north.length(); i++) {
+            g[0][i] = north.charAt(i);
+            g[d - 1][w - 1 - i] = north.charAt(i);
+        }
+        for (int z : new int[]{3, 4, 5}) g[z][0] = 'B';
+        for (int z : new int[]{17, 18, 19}) g[z][w - 1] = 'B';
+        g[15][0] = 'W';
+        g[16][0] = 'Q';
+        g[11][0] = 'X';
+        g[5][w - 1] = 'W';
+        g[6][w - 1] = 'Q';
+        g[8][w - 1] = 'X';
+        for (int z : new int[]{10, 11, 12}) g[z][w - 1] = 'S';
+        int[][] islands = {{8, 6, 12, 7}, {20, 6, 24, 7}, {8, 15, 12, 16}, {20, 15, 24, 16}, {14, 10, 18, 12}};
+        for (int[] r : islands) {
+            for (int z = r[1]; z <= r[3]; z++) for (int x = r[0]; x <= r[2]; x++) g[z][x] = 'C';
+        }
+        g[11][15] = 'D';
+        g[11][17] = 'U';
+        String[] out = new String[d];
+        for (int z = 0; z < d; z++) out[z] = new String(g[z]);
+        return out;
+    }
+
     /** Counters use sandstone, retextured by the pack as a wooden worktop over cabinet doors. */
     static final Material COUNTER = Material.SANDSTONE;
     static final Material PLATE_STAND = Material.SMOOTH_QUARTZ;
