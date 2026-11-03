@@ -197,12 +197,15 @@ public final class KitchenRush extends JavaPlugin implements Listener {
             g.team = t;
             match.add(g, members);
             g.start(Game.Mode.TEAM, arena, members);
-            // Dummies just stand in their team's kitchen so you can see who is where.
+            // Dummies just stand in their team's kitchen, spread over the free floor so each one is visible.
+            List<Location> floor = arena.floorSpots();
             for (int i = 0; i < stand.size(); i++) {
-                stand.get(i).teleport(arena.spawns.get((members.size() + i) % arena.spawns.size()));
+                stand.get(i).teleport(floor.get((int) ((i + 0.5) * floor.size() / stand.size()) % floor.size()));
             }
             Component hello = t.prefix().append(Component.text(" 주방에 오신 걸 환영해요! 5분 동안 최대한 많은 점수를 모으세요.", NamedTextColor.AQUA));
             members.forEach(p -> p.sendMessage(hello));
+            Bukkit.broadcast(t.prefix().append(Component.text(" " + (members.size() + stand.size()) + "명 (플레이어 "
+                    + members.size() + ", 더미 " + stand.size() + ")", NamedTextColor.WHITE)));
         }
         Bukkit.broadcast(Component.text("팀 대항 요리 대결 시작! (" + active.size() + "팀, 5분)", NamedTextColor.GOLD));
         return true;
@@ -220,11 +223,14 @@ public final class KitchenRush extends JavaPlugin implements Listener {
             count = -1;
         }
         if (count < 1 || count > 40) {
-            sender.sendMessage(Component.text("/fp player <인원(1~40)>  내 스킨을 입은 테스트용 더미를 소환해요", NamedTextColor.GRAY));
+            sender.sendMessage(Component.text("/fp player <인원(1~40)>  내 스킨을 입은 테스트용 더미를 그 인원만큼 맞춰요", NamedTextColor.GRAY));
             return true;
         }
+        // Sets the total rather than adding, so repeated tests don't pile up extra dummies.
+        int old = dummies.removeAll(world);
         dummies.spawn(p, count);
-        sender.sendMessage(Component.text("더미 " + count + "명을 소환했어요. /팀분배 에 함께 포함돼요. (/전체초기화 로 제거)", NamedTextColor.GREEN));
+        sender.sendMessage(Component.text("더미를 " + count + "명으로 맞췄어요" + (old > 0 ? " (기존 " + old + "명 정리)" : "")
+                + ". /팀분배 에 함께 포함돼요. (/전체초기화 로 제거)", NamedTextColor.GREEN));
         return true;
     }
 
@@ -335,9 +341,21 @@ public final class KitchenRush extends JavaPlugin implements Listener {
         if (p.getGameMode() != GameMode.CREATIVE && p.getGameMode() != GameMode.SPECTATOR) p.setGameMode(GameMode.ADVENTURE);
         p.getInventory().clear();
         Game.setJump(p, true);
-        teams.apply(p);
         dummies.showTab(p);
         p.sendMessage(Component.text("주방 대소동에 오신 걸 환영해요! OP라면 /cook 으로 명령어를 확인하세요.", NamedTextColor.GOLD));
+        // Teams are in play: put the newcomer in the smallest team, and straight into its kitchen mid-match.
+        Teams.Team t = teams.joinSmallest(p);
+        if (t == null) return;
+        Bukkit.broadcast(t.prefix().append(Component.text(" " + p.getName() + "님이 팀에 합류했어요!", NamedTextColor.WHITE)));
+        if (match != null && !match.over()) {
+            for (Game g : match.games) {
+                if (g.team == t && g.active()) {
+                    g.join(p);
+                    match.add(null, List.of(p));
+                    p.sendMessage(t.prefix().append(Component.text(" 주방에 바로 투입됐어요! 남은 시간 동안 힘내요.", NamedTextColor.AQUA)));
+                }
+            }
+        }
     }
 
     /** Chat as "[도팀]name: message" with the team tag in its colour. */
@@ -354,7 +372,13 @@ public final class KitchenRush extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
-        if (game.playing(e.getPlayer())) game.stop();
+        Player p = e.getPlayer();
+        if (game.playing(p)) game.stop();
+        // Leaving mid-game drops you from your team (team games just carry on without you).
+        Teams.Team t = teams.remove(p);
+        if (t != null) {
+            Bukkit.broadcast(t.prefix().append(Component.text(" " + p.getName() + "님이 나가서 팀에서 빠졌어요.", NamedTextColor.GRAY)));
+        }
     }
 
     @EventHandler(ignoreCancelled = false)

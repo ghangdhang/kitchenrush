@@ -17,8 +17,9 @@ final class Match {
     private final List<Player> everyone = new ArrayList<>();
     private boolean announced;
 
+    /** Registers a team's arena and its cooks; a null game just adds late joiners to the announcement list. */
     void add(Game g, List<Player> members) {
-        games.add(g);
+        if (g != null) games.add(g);
         everyone.addAll(members);
     }
 

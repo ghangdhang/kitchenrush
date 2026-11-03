@@ -65,7 +65,9 @@ final class Dummies {
                 e.setDescription(Component.empty());
                 e.setImmovable(true);
                 e.setInvulnerable(true);
-                e.setPersistent(true);
+                // Not saved with the world: their tab rows can't survive a restart either, and leftovers from
+                // older test runs would silently join the next team split.
+                e.setPersistent(false);
             });
             TabEntry entry = new TabEntry(UUID.randomUUID(), name, tabSkin);
             tab.put(m.getUniqueId(), entry);

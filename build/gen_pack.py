@@ -265,6 +265,12 @@ def draw(name):
         fries(c, 10, 10.5, small=True)
         c.dots([(7, 11), (8, 11)], GREEN)
         c.dots([(8, 8)], RED)
+    elif name == 'knife':
+        for i in range(8):
+            c.set(3 + i, 12 - i, hexc('e6ebef'))
+            c.set(4 + i, 12 - i, hexc('c9d1d8'))
+        c.rect(10, 3, 12, 5, hexc('7a5230'))
+        c.set(13, 2, hexc('7a5230'))
     elif name == 'plate_cover':
         for x in (2, 13):
             c.rect(x, 4, x, 13, hexc('8f9aa3'))
@@ -298,7 +304,7 @@ ITEMS = ['tomato', 'tomato_chopped', 'lettuce', 'lettuce_chopped', 'meat', 'patt
          'burnt', 'bread', 'plate', 'plate_salad', 'plate_mixsalad', 'plate_bread', 'plate_patty', 'plate_burger',
          'pan', 'fish', 'fish_chopped', 'fish_fried', 'potato', 'potato_chopped', 'fries', 'dirty_plate',
          'plate_tomato', 'plate_fish', 'plate_fries', 'plate_fishfries', 'plate_special', 'plate_fishset',
-         'plate_cover']
+         'plate_cover', 'knife']
 ICONS_ONLY = ['clock', 'coin']
 
 # ---------------------------------------------------------------- 3D models
@@ -558,7 +564,20 @@ def m_plate_cover(m, t):
     m.box(t, -1.2, h, -1.2, 1.2, h + 0.9, 1.2, 'steel_l')
 
 
+def m_knife(m, t):
+    """A kitchen knife lying flat along the right edge of a chopping board."""
+    x0, x1 = 6.0, 7.4
+    m.box(t, x0, 0, -6.2, x1, 0.35, 1.0, 'steel_l')        # blade
+    m.box(t, x1 - 0.3, 0, -6.2, x1, 0.45, 1.0, 'steel_d')  # spine
+    m.box(t, x0 + 0.2, 0, -6.8, x1 - 0.2, 0.3, -6.2, 'steel_l')  # tip
+    m.box(t, x0 - 0.05, 0, 1.0, x1 + 0.05, 0.75, 1.5, 'steel')  # bolster
+    m.box(t, x0 + 0.1, 0, 1.5, x1 - 0.1, 0.8, 5.6, 'handle')  # handle
+    for z in (2.6, 4.4):
+        m.box(t, x0 + 0.05, 0.8, z - 0.25, x1 - 0.05, 0.85, z + 0.25, 'steel_l')  # rivets
+
+
 FOOD_3D = {
+    'knife': lambda m: m_knife(m, T()),
     'plate_cover': lambda m: m_plate_cover(m, T()),
     'tomato': lambda m: m_tomato(m, T()),
     'tomato_chopped': lambda m: m_tomato_slices(m, T()),

@@ -83,6 +83,24 @@ final class Teams {
         return result;
     }
 
+    /** Takes someone out of their team (e.g. they left the server). */
+    Team remove(Entity e) {
+        Team t = members.remove(e.getUniqueId());
+        if (t != null) apply(e);
+        return t;
+    }
+
+    /** Puts a newcomer into the currently smallest of the teams in play. */
+    Team joinSmallest(Entity e) {
+        List<Team> active = activeTeams();
+        if (active.isEmpty() || members.containsKey(e.getUniqueId())) return members.get(e.getUniqueId());
+        Team best = active.get(0);
+        for (Team t : active) if (membersOf(t).size() < membersOf(best).size()) best = t;
+        members.put(e.getUniqueId(), best);
+        apply(e);
+        return best;
+    }
+
     /** Shows the team prefix in the tab list, above the head and (via the chat renderer) in chat. */
     void apply(Entity e) {
         Team t = members.get(e.getUniqueId());

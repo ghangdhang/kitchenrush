@@ -74,9 +74,8 @@ final class Kitchen {
         for (int[] r : tables) {
             for (int z = r[1]; z <= r[3]; z++) for (int x = r[0]; x <= r[2]; x++) g[z][x] = 'C';
         }
-        g[6][5] = 'B';
-        g[6][8] = 'B';
-        g[15][6] = 'B';
+        // Four boards on the table edge that faces the crates, so you turn from a crate straight to a board.
+        for (int x = 5; x <= 8; x++) g[5][x] = 'B';
         g[11][10] = 'D';
         for (int z = 0; z < d; z++) {
             for (int x = 0; x < TEAM_MID; x++) g[d - 1 - z][w - 1 - x] = g[z][x];
@@ -161,6 +160,17 @@ final class Kitchen {
             if (s != null && s.kind == Station.Kind.PLATES) return s;
         }
         return plates;
+    }
+
+    /** Every walkable floor cell of the layout, row by row (used to spread dummies around). */
+    List<Location> floorSpots() {
+        List<Location> out = new ArrayList<>();
+        for (int z = 1; z < layout.length - 1; z++) {
+            for (int x = 1; x < width() - 1; x++) {
+                if (layout[z].charAt(x) == '.') out.add(new Location(world, ox + x + 0.5, oy + 1, oz + z + 0.5, 180f, 0f));
+            }
+        }
+        return out;
     }
 
     Station at(Block b) {
@@ -256,6 +266,8 @@ final class Kitchen {
                 board.setType(Material.BIRCH_PRESSURE_PLATE, false);
                 s = add(new Station(Station.Kind.BOARD, b, null));
                 byBlock.put(key(board.getX(), board.getY(), board.getZ()), s);
+                // A knife resting along the board's edge makes boards easy to spot at a glance.
+                s.addExtra(s.restItem(s.top().add(0, 0.065, 0), Items.of("knife"), Station.FOOD_SCALE));
                 s.label("도마", 1.0, 0.5f);
             }
             case 'L', 'T', 'M', 'R', 'F', 'O' -> {

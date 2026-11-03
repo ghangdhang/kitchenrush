@@ -117,24 +117,34 @@ final class Game {
 
     // ---------------------------------------------------------------- round lifecycle
 
+    private void prepare(Player p, int index) {
+        p.teleport(kitchen.spawns.get(index % kitchen.spawns.size()));
+        p.setGameMode(GameMode.ADVENTURE);
+        p.getInventory().clear();
+        p.getInventory().setHeldItemSlot(0);
+        p.setFoodLevel(20);
+        var hp = p.getAttribute(Attribute.MAX_HEALTH);
+        if (hp != null) p.setHealth(hp.getValue());
+        p.setWalkSpeed(0.24f);
+        setJump(p, false);
+    }
+
+    /** Drops a player into a round that is already under way (e.g. they joined the server mid-match). */
+    void join(Player p) {
+        if (phase == Phase.IDLE || players.contains(p)) return;
+        players.add(p);
+        prepare(p, players.size() - 1);
+        for (BossBar b : bars) p.showBossBar(b);
+        updateHud();
+    }
+
     void start(Mode mode, Kitchen kitchen, List<Player> who) {
         stop();
         this.mode = mode;
         this.kitchen = kitchen;
         kitchen.build();
         players.addAll(who);
-        for (int i = 0; i < players.size(); i++) {
-            Player p = players.get(i);
-            p.teleport(kitchen.spawns.get(Math.min(i, kitchen.spawns.size() - 1)));
-            p.setGameMode(GameMode.ADVENTURE);
-            p.getInventory().clear();
-            p.getInventory().setHeldItemSlot(0);
-            p.setFoodLevel(20);
-            var hp = p.getAttribute(Attribute.MAX_HEALTH);
-            if (hp != null) p.setHealth(hp.getValue());
-            p.setWalkSpeed(0.24f);
-            setJump(p, false);
-        }
+        for (int i = 0; i < players.size(); i++) prepare(players.get(i), i);
         for (Station s : kitchen.stations) {
             if (s.kind == Station.Kind.PLATES) {
                 s.count = kitchen.stands.contains(s) ? mode.plates / kitchen.stands.size() : 0;
