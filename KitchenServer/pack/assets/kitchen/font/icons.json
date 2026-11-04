@@ -281,7 +281,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kitchen:font/clock.png",
+   "file": "kitchen:item/rice.png",
    "height": 9,
    "ascent": 8,
    "chars": [
@@ -290,7 +290,7 @@
   },
   {
    "type": "bitmap",
-   "file": "kitchen:font/coin.png",
+   "file": "kitchen:item/rice_cooked.png",
    "height": 9,
    "ascent": 8,
    "chars": [
@@ -299,11 +299,56 @@
   },
   {
    "type": "bitmap",
+   "file": "kitchen:item/extinguisher.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue021"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/plate_sushi.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue022"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:item/plate_meatset.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue023"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:font/clock.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue024"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "kitchen:font/coin.png",
+   "height": 9,
+   "ascent": 8,
+   "chars": [
+    "\ue025"
+   ]
+  },
+  {
+   "type": "bitmap",
    "file": "kitchen:font/pip.png",
    "height": 7,
    "ascent": 7,
    "chars": [
-    "\ue021"
+    "\ue026"
    ]
   },
   {
@@ -312,7 +357,7 @@
    "height": 16,
    "ascent": 12,
    "chars": [
-    "\ue022"
+    "\ue027"
    ]
   },
   {
@@ -321,7 +366,7 @@
    "height": 16,
    "ascent": 12,
    "chars": [
-    "\ue023"
+    "\ue028"
    ]
   },
   {
@@ -330,7 +375,7 @@
    "height": 16,
    "ascent": 12,
    "chars": [
-    "\ue024"
+    "\ue029"
    ]
   },
   {
@@ -339,7 +384,7 @@
    "height": 22,
    "ascent": 17,
    "chars": [
-    "\ue025"
+    "\ue02a"
    ]
   },
   {
@@ -348,7 +393,7 @@
    "height": 22,
    "ascent": 17,
    "chars": [
-    "\ue026"
+    "\ue02b"
    ]
   },
   {
@@ -357,7 +402,7 @@
    "height": 22,
    "ascent": 17,
    "chars": [
-    "\ue027"
+    "\ue02c"
    ]
   },
   {
@@ -366,7 +411,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue028"
+    "\ue02d"
    ]
   },
   {
@@ -375,7 +420,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue029"
+    "\ue02e"
    ]
   },
   {
@@ -384,7 +429,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue02a"
+    "\ue02f"
    ]
   },
   {
@@ -393,7 +438,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue02b"
+    "\ue030"
    ]
   },
   {
@@ -402,7 +447,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue02c"
+    "\ue031"
    ]
   },
   {
@@ -411,7 +456,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue02d"
+    "\ue032"
    ]
   },
   {
@@ -420,7 +465,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue02e"
+    "\ue033"
    ]
   },
   {
@@ -429,7 +474,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue02f"
+    "\ue034"
    ]
   },
   {
@@ -438,7 +483,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue030"
+    "\ue035"
    ]
   },
   {
@@ -447,7 +492,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue031"
+    "\ue036"
    ]
   },
   {
@@ -456,7 +501,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue032"
+    "\ue037"
    ]
   },
   {
@@ -465,7 +510,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue033"
+    "\ue038"
    ]
   },
   {
@@ -474,7 +519,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue034"
+    "\ue039"
    ]
   },
   {
@@ -483,7 +528,7 @@
    "height": 14,
    "ascent": 12,
    "chars": [
-    "\ue035"
+    "\ue03a"
    ]
   }
  ]

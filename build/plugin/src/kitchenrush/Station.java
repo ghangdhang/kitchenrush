@@ -22,7 +22,7 @@ import java.util.List;
 
 /** One interactive spot in the kitchen and its floating visuals. */
 final class Station {
-    enum Kind { COUNTER, BOARD, CRATE, PAN, FRYER, PLATES, RETURN, SINK, SERVE, TRASH }
+    enum Kind { COUNTER, BOARD, CRATE, PAN, FRYER, COOKER, PLATES, RETURN, SINK, SERVE, TRASH }
 
     static final String TAG = "kitchenrush";
     /** Size of food, plates and covers resting on stations (1.5x the original 0.65). */
@@ -33,6 +33,9 @@ final class Station {
     final String crate;
     ItemStack item;
     int chop, cook, count;
+    /** Overcooked pan/fryer/rice cooker on fire: blocked until sprayed with an extinguisher. */
+    boolean onFire;
+    int fireHits;
 
     private ItemDisplay itemDisplay;
     private TextDisplay bar, hover;

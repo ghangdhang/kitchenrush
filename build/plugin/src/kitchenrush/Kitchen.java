@@ -17,13 +17,13 @@ import java.util.Map;
 final class Kitchen {
     /*
      * Top-down layouts (north at the top). One character per block.
-     *   C counter   B chopping board   L/T/M/R/F/O lettuce/tomato/meat/bread/fish/potato crates
-     *   P stove with pan   Y fryer   D clean plates   U dirty plate return   W sink   Q drying rack
-     *   S serving hatch   X bin   . floor
+     *   C counter   B chopping board   L/T/M/R/F/O/I lettuce/tomato/meat/bread/fish/potato/rice crates
+     *   P stove with pan   Y fryer   K rice cooker   E counter with an extinguisher
+     *   D clean plates   U dirty plate return   W sink   Q drying rack   S serving hatch   X bin   . floor
      */
     static final String[] SOLO = {
-            "LTMRFOCPPCYYC",
-            "C...........C",
+            "LTMRFOIPPKYYC",
+            "C...........E",
             "B...........C",
             "B...CCDUC...S",
             "C...CCCCC...S",
@@ -34,8 +34,8 @@ final class Kitchen {
     };
     /** Multi-player kitchen: a middle counter splits prep (west) from cooking (east), with one gap to walk through. */
     static final String[] DUO = {
-            "LTMRFOCCCCPPCCYYCCC",
-            "C........C........C",
+            "LTMRFOICCCPPKCYYCCC",
+            "E........C........E",
             "B........C........C",
             "B........C........S",
             "B........C........S",
@@ -63,7 +63,7 @@ final class Kitchen {
             for (int x = 0; x < w; x++) g[z][x] = (x == 0 || z == 0 || x == w - 1 || z == d - 1) ? 'C' : '.';
         }
         // West half; the east half is its point mirror.
-        String wall = "LTMRFOCPPYY";
+        String wall = "LTMRFOIPPYYKE";
         for (int i = 0; i < wall.length(); i++) g[0][i] = wall.charAt(i);
         for (int z : new int[]{10, 11, 12}) g[z][0] = 'S';
         g[13][0] = 'U';
@@ -270,7 +270,7 @@ final class Kitchen {
                 s.addExtra(s.restItem(s.top().add(0, 0.065, 0), Items.of("knife"), Station.FOOD_SCALE));
                 s.label("도마", 1.0, 0.5f);
             }
-            case 'L', 'T', 'M', 'R', 'F', 'O' -> {
+            case 'L', 'T', 'M', 'R', 'F', 'O', 'I' -> {
                 b.setBlockData(Bukkit.createBlockData("minecraft:barrel[facing=up]"), false);
                 String type = switch (c) {
                     case 'L' -> "lettuce";
@@ -278,6 +278,7 @@ final class Kitchen {
                     case 'M' -> "meat";
                     case 'F' -> "fish";
                     case 'O' -> "potato";
+                    case 'I' -> "rice";
                     default -> "bread";
                 };
                 s = add(new Station(Station.Kind.CRATE, b, type));
@@ -294,6 +295,17 @@ final class Kitchen {
                 b.setType(Material.LAVA_CAULDRON, false);
                 s = add(new Station(Station.Kind.FRYER, b, null));
                 s.label("튀김기", 1.0, 0.5f);
+            }
+            case 'K' -> {
+                b.setType(Material.BONE_BLOCK, false);
+                s = add(new Station(Station.Kind.COOKER, b, null));
+                s.label("밥솥", 1.0, 0.5f);
+            }
+            case 'E' -> {
+                b.setType(COUNTER, false);
+                s = add(new Station(Station.Kind.COUNTER, b, null));
+                s.setItem(Items.of("extinguisher"));
+                s.label("소화기", 1.0, 0.5f);
             }
             case 'S' -> {
                 b.setType(Material.LIME_GLAZED_TERRACOTTA, false);

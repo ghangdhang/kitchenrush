@@ -47,7 +47,38 @@ final class Game {
     }
 
     static final int MAX_ORDERS = 4, CHOPS = 6, WASHES = 6, DIRTY_DELAY = 7 * 20;
-    static final int PAN_COOK = 120, PAN_BURN = 200, FRY_COOK = 140, FRY_BURN = 220;
+    static final int PAN_COOK = 120, PAN_BURN = 200, FRY_COOK = 140, FRY_BURN = 220, RICE_COOK = 160, RICE_BURN = 220;
+    /** Extinguisher sprays (hold right-click) needed to put a fire out. */
+    static final int FIRE_SPRAYS = 5;
+
+    static boolean heated(Station.Kind k) {
+        return k == Station.Kind.PAN || k == Station.Kind.FRYER || k == Station.Kind.COOKER;
+    }
+
+    /** Raw input -> cooked result for a heated station. */
+    static Map<String, String> recipeOf(Station.Kind k) {
+        return switch (k) {
+            case PAN -> Items.PAN;
+            case FRYER -> Items.FRIES;
+            default -> Items.COOKER;
+        };
+    }
+
+    static int cookTime(Station.Kind k) {
+        return k == Station.Kind.PAN ? PAN_COOK : k == Station.Kind.FRYER ? FRY_COOK : RICE_COOK;
+    }
+
+    static int burnTime(Station.Kind k) {
+        return k == Station.Kind.PAN ? PAN_BURN : k == Station.Kind.FRYER ? FRY_BURN : RICE_BURN;
+    }
+
+    /** Which heated station cooks this raw item, for hover hints and saved progress. */
+    static Station.Kind cookerFor(String raw) {
+        if (Items.PAN.containsKey(raw)) return Station.Kind.PAN;
+        if (Items.FRIES.containsKey(raw)) return Station.Kind.FRYER;
+        if (Items.COOKER.containsKey(raw)) return Station.Kind.COOKER;
+        return null;
+    }
     static final TextColor GOLD = TextColor.color(0xFFD84A);
 
     record Order(Items.Recipe recipe, int total, int[] left) {
@@ -343,20 +374,24 @@ final class Game {
             case CRATE -> {
                 return List.of(Items.name(s.crate) + " 상자");
             }
-            case COUNTER, BOARD, PAN, FRYER -> {
-                if (s.item == null) return null;
+            case COUNTER, BOARD, PAN, FRYER, COOKER -> {
+                if (s.onFire) return List.of("불이 났어요!", "소화기를 들고 꾹 눌러 끄세요 (" + s.fireHits + "/" + FIRE_SPRAYS + ")");
+                if (s.item == null) return s.kind == Station.Kind.COOKER ? List.of("밥솥", "쌀을 넣으면 밥이 돼요") : null;
                 if (Items.isPlate(s.item)) return Items.describePlate(Items.contents(s.item));
                 String t = Items.type(s.item);
                 List<String> lines = new ArrayList<>();
-                int cooked = s.kind == Station.Kind.PAN || s.kind == Station.Kind.FRYER ? s.cook : Items.cook(s.item);
-                int full = "patty_raw".equals(t) ? PAN_COOK : FRY_COOK;
-                boolean raw = "patty_raw".equals(t) || Items.FRIES.containsKey(t);
-                lines.add(Items.name(t) + (raw && cooked > 0 ? " (익힘 " + Math.min(99, cooked * 100 / full) + "%)" : ""));
+                Station.Kind cooks = cookerFor(t);
+                int cooked = heated(s.kind) ? s.cook : Items.cook(s.item);
+                lines.add(Items.name(t) + (cooks != null && cooked > 0
+                        ? " (익힘 " + Math.min(99, cooked * 100 / cookTime(cooks)) + "%)" : ""));
                 if (Items.CHOPS.containsKey(t)) lines.add("→ 도마에서 썰면: " + Items.name(Items.CHOPS.get(t)));
-                else if ("patty_raw".equals(t)) lines.add("→ 프라이팬에 구우면: " + Items.name("patty_cooked"));
-                else if (Items.FRIES.containsKey(t)) lines.add("→ 튀김기에 넣으면: " + Items.name(Items.FRIES.get(t)));
+                else if (cooks == Station.Kind.PAN) lines.add("→ 프라이팬에 구우면: " + Items.name(Items.PAN.get(t)));
+                else if (cooks == Station.Kind.FRYER) lines.add("→ 튀김기에 넣으면: " + Items.name(Items.FRIES.get(t)));
+                else if (cooks == Station.Kind.COOKER) lines.add("→ 밥솥에 넣으면: " + Items.name(Items.COOKER.get(t)));
                 else if ("burnt".equals(t)) lines.add("쓰레기통에 버리세요");
                 else if ("dirty_plate".equals(t)) lines.add("싱크대에서 설거지하세요");
+                else if ("extinguisher".equals(t)) lines.add("불난 곳에 대고 꾹 누르면 불이 꺼져요");
+                if (Items.CHOPS.containsKey(t) && "fish".equals(t)) lines.add("  (다진 생선은 초밥에도 써요)");
                 return lines;
             }
             default -> {
@@ -367,40 +402,78 @@ final class Game {
 
     private void spawnOrder() {
         double r = rnd.nextDouble();
-        Items.Recipe recipe = r < 0.15 ? Items.Recipe.SALAD : r < 0.35 ? Items.Recipe.TOMATO_SALAD
-                : r < 0.58 ? Items.Recipe.BURGER : r < 0.8 ? Items.Recipe.SPECIAL : Items.Recipe.FISH_SET;
+        Items.Recipe recipe = r < 0.10 ? Items.Recipe.SALAD : r < 0.24 ? Items.Recipe.TOMATO_SALAD
+                : r < 0.40 ? Items.Recipe.BURGER : r < 0.56 ? Items.Recipe.SUSHI : r < 0.71 ? Items.Recipe.SPECIAL
+                : r < 0.86 ? Items.Recipe.MEAT_SET : Items.Recipe.FISH_SET;
         orders.add(new Order(recipe, recipe.seconds * 20, new int[]{recipe.seconds * 20}));
         playAll(Sound.BLOCK_NOTE_BLOCK_BELL, 0.7f, 1.4f);
     }
 
     private void tickStation(Station s) {
+        if (!heated(s.kind)) return;
         Location fx = s.top().add(0, 0.3, 0);
-        if ((s.kind == Station.Kind.PAN || s.kind == Station.Kind.FRYER) && s.item != null) {
-            boolean pan = s.kind == Station.Kind.PAN;
-            String t = Items.type(s.item);
-            String done = pan ? ("patty_raw".equals(t) ? "patty_cooked" : null) : Items.FRIES.get(t);
-            int cookTime = pan ? PAN_COOK : FRY_COOK, burnTime = pan ? PAN_BURN : FRY_BURN;
-            if (done != null) {
-                s.cook++;
-                s.showBar(s.cook / (float) cookTime, NamedTextColor.GREEN, "");
-                if (s.cook % 25 == 0) sound(fx, pan ? Sound.BLOCK_FIRE_AMBIENT : Sound.BLOCK_LAVA_POP, 0.8f, 1.6f);
-                if (s.cook >= cookTime) {
-                    s.setItem(Items.of(done));
-                    s.cook = 0;
-                    s.hideBar();
-                    sound(fx, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.6f, 1.2f);
-                }
-            } else if (!"burnt".equals(t)) {
-                s.cook++;
-                warnBurn(s, fx, s.cook, burnTime);
-                if (s.cook >= burnTime) {
-                    s.setItem(Items.of("burnt"));
-                    s.hideBar();
-                    sound(fx, Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 0.8f, 1f);
-                }
-            } else if (ticks % 6 == 0) {
-                fx.getWorld().spawnParticle(Particle.LARGE_SMOKE, fx, 2, 0.15, 0.1, 0.15, 0.01);
+        if (s.onFire) {
+            // Flames until someone puts it out; nothing cooks here meanwhile.
+            if (ticks % 2 == 0) fx.getWorld().spawnParticle(Particle.FLAME, fx, 8, 0.25, 0.25, 0.25, 0.02);
+            if (ticks % 5 == 0) fx.getWorld().spawnParticle(Particle.LARGE_SMOKE, fx.clone().add(0, 0.4, 0), 2, 0.2, 0.1, 0.2, 0.02);
+            if (ticks % 20 == 0) sound(fx, Sound.BLOCK_FIRE_AMBIENT, 1f, 1f);
+            s.showBar(1f, NamedTextColor.RED, (ticks / 8) % 2 == 0 ? " 불!" : "    ");
+            return;
+        }
+        if (s.item == null) return;
+        String t = Items.type(s.item);
+        String done = recipeOf(s.kind).get(t);
+        int cookTime = cookTime(s.kind), burnTime = burnTime(s.kind);
+        if (done != null) {
+            s.cook++;
+            s.showBar(s.cook / (float) cookTime, NamedTextColor.GREEN, "");
+            if (s.cook % 25 == 0) sound(fx, s.kind == Station.Kind.FRYER ? Sound.BLOCK_LAVA_POP
+                    : s.kind == Station.Kind.COOKER ? Sound.BLOCK_BUBBLE_COLUMN_BUBBLE_POP : Sound.BLOCK_FIRE_AMBIENT, 0.8f, 1.6f);
+            if (s.cook >= cookTime) {
+                s.setItem(Items.of(done));
+                s.cook = 0;
+                s.hideBar();
+                sound(fx, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.6f, 1.2f);
             }
+        } else if (!"burnt".equals(t)) {
+            s.cook++;
+            warnBurn(s, fx, s.cook, burnTime);
+            if (s.cook >= burnTime) {
+                // Overcooked: it burns and catches fire.
+                s.setItem(Items.of("burnt"));
+                s.onFire = true;
+                s.fireHits = 0;
+                s.cook = 0;
+                sound(fx, Sound.ITEM_FIRECHARGE_USE, 1f, 0.8f);
+                flash("불이 났어요! 소화기로 끄세요!", BAD);
+            }
+        } else if (ticks % 6 == 0) {
+            fx.getWorld().spawnParticle(Particle.LARGE_SMOKE, fx, 2, 0.15, 0.1, 0.15, 0.01);
+        }
+    }
+
+    /** One spray from an extinguisher at a station; enough sprays put a fire out. */
+    private void spray(Player p, Station s) {
+        if (!hitReady(p)) return;
+        p.swingMainHand();
+        Location eye = p.getEyeLocation(), target = s.top().add(0, 0.3, 0);
+        var dir = target.toVector().subtract(eye.toVector());
+        for (int i = 1; i <= 6; i++) {
+            Location at = eye.clone().add(dir.clone().multiply(i / 6.0));
+            at.getWorld().spawnParticle(Particle.CLOUD, at, 2, 0.05, 0.05, 0.05, 0.01);
+        }
+        target.getWorld().spawnParticle(Particle.SPLASH, target, 12, 0.3, 0.2, 0.3, 0.1);
+        sound(target, Sound.ENTITY_GENERIC_SPLASH, 0.6f, 1.6f);
+        if (!s.onFire) return;
+        s.fireHits++;
+        s.showBar(s.fireHits / (float) FIRE_SPRAYS, NamedTextColor.AQUA, "");
+        if (s.fireHits >= FIRE_SPRAYS) {
+            s.onFire = false;
+            s.fireHits = 0;
+            s.hideBar();
+            sound(target, Sound.BLOCK_FIRE_EXTINGUISH, 1f, 1f);
+            target.getWorld().spawnParticle(Particle.CLOUD, target, 20, 0.3, 0.3, 0.3, 0.02);
+            flash("불을 껐어요! 탄 음식은 버려 주세요", GOOD);
         }
     }
 
@@ -419,6 +492,16 @@ final class Game {
         if (!running() || !players.contains(p) || kitchen.at(s.block) != s) return;
         ItemStack hand = hand(p);
         String ht = Items.type(hand);
+        // An extinguisher sprays at whatever cooking spot you point it at.
+        if ("extinguisher".equals(ht) && (heated(s.kind) || s.onFire)) {
+            spray(p, s);
+            return;
+        }
+        if (s.onFire) {
+            flash("불이 났어요! 소화기로 먼저 끄세요", BAD);
+            bad(p);
+            return;
+        }
         switch (s.kind) {
             case CRATE -> {
                 if (hand == null) {
@@ -477,7 +560,7 @@ final class Game {
                 else bad(p);
             }
             case COUNTER, BOARD -> counter(p, s, hand);
-            case PAN, FRYER -> cooker(p, s, hand, ht);
+            case PAN, FRYER, COOKER -> cooker(p, s, hand, ht);
         }
     }
 
@@ -588,15 +671,16 @@ final class Game {
         }
     }
 
+    /** Pan, fryer and rice cooker: put raw food in, take it out (half-cooked keeps its progress), or plate it. */
     private void cooker(Player p, Station s, ItemStack hand, String ht) {
-        boolean pan = s.kind == Station.Kind.PAN;
+        Map<String, String> accepts = recipeOf(s.kind);
         if (hand == null) {
             if (s.item == null) {
                 bad(p);
                 return;
             }
             // Half-cooked food keeps how far it got, so putting it back on continues instead of restarting.
-            boolean stillCooking = pan ? "patty_raw".equals(Items.type(s.item)) : Items.FRIES.containsKey(Items.type(s.item));
+            boolean stillCooking = accepts.containsKey(Items.type(s.item));
             setHand(p, stillCooking ? Items.withCook(s.item, s.cook) : s.item);
             s.setItem(null);
             s.cook = 0;
@@ -605,12 +689,11 @@ final class Game {
             return;
         }
         if (s.item == null) {
-            boolean ok = pan ? "patty_raw".equals(ht) : Items.FRIES.containsKey(ht);
-            if (ok) {
+            if (accepts.containsKey(ht)) {
                 s.setItem(hand);
                 s.cook = Items.cook(hand);
                 setHand(p, null);
-                good(p, pan ? Sound.BLOCK_FIRE_AMBIENT : Sound.BLOCK_LAVA_POP);
+                good(p, s.kind == Station.Kind.FRYER ? Sound.BLOCK_LAVA_POP : Sound.BLOCK_FIRE_AMBIENT);
             } else bad(p);
             return;
         }

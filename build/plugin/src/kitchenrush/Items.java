@@ -28,7 +28,12 @@ final class Items {
         SPECIAL("스페셜 버거", "plate_special", Set.of("bread", "patty_cooked", "lettuce_chopped", "tomato_chopped"), 4, 110,
                 new String[]{"bread", "+", "patty_cooked", "+", "lettuce_chopped", "+", "tomato_chopped"}),
         FISH_SET("생선튀김 정식", "plate_fishset", Set.of("fish_fried", "fries", "lettuce_chopped", "tomato_chopped"), 5, 140,
-                new String[]{"fish_fried", "+", "fries", "+", "lettuce_chopped", "+", "tomato_chopped"});
+                new String[]{"fish_fried", "+", "fries", "+", "lettuce_chopped", "+", "tomato_chopped"}),
+        // Rice dishes: rice only needs the rice cooker, so sushi is one chop + one cook.
+        SUSHI("초밥", "plate_sushi", Set.of("fish_chopped", "rice_cooked"), 3, 90,
+                new String[]{"fish_chopped", "+", "rice_cooked"}),
+        MEAT_SET("고기 정식", "plate_meatset", Set.of("fries", "patty_cooked", "rice_cooked"), 4, 120,
+                new String[]{"fries", "+", "patty_cooked", "+", "rice_cooked"});
 
         final String name, icon;
         final Set<String> contents;
@@ -53,27 +58,17 @@ final class Items {
             Map.entry("fish", "생선"), Map.entry("fish_chopped", "다진 생선"), Map.entry("fish_fried", "튀긴 다진 생선"),
             Map.entry("potato", "감자"), Map.entry("potato_chopped", "썬 감자"), Map.entry("fries", "튀긴 썬 감자"),
             Map.entry("burnt", "탄 음식"), Map.entry("plate", "접시"), Map.entry("dirty_plate", "더러운 접시"),
-            Map.entry("pan", "프라이팬"));
+            Map.entry("pan", "프라이팬"), Map.entry("rice", "쌀"), Map.entry("rice_cooked", "밥"),
+            Map.entry("extinguisher", "소화기"), Map.entry("knife", "칼"));
 
     static final Map<String, String> CHOPS = Map.of(
             "lettuce", "lettuce_chopped", "tomato", "tomato_chopped", "meat", "patty_raw",
             "fish", "fish_chopped", "potato", "potato_chopped");
 
+    /** What each heated station turns its raw input into. */
+    static final Map<String, String> PAN = Map.of("patty_raw", "patty_cooked");
     static final Map<String, String> FRIES = Map.of("fish_chopped", "fish_fried", "potato_chopped", "fries");
-
-    /** Plate pictures, checked biggest first: the plate shows the largest picture its contents cover. */
-    private static final List<Map.Entry<String, Set<String>>> PLATE_MODELS = List.of(
-            Map.entry("plate_fishset", Set.of("fish_fried", "fries", "lettuce_chopped", "tomato_chopped")),
-            Map.entry("plate_special", Set.of("bread", "patty_cooked", "lettuce_chopped", "tomato_chopped")),
-            Map.entry("plate_fishfries", Set.of("fish_fried", "fries")),
-            Map.entry("plate_burger", Set.of("bread", "patty_cooked")),
-            Map.entry("plate_mixsalad", Set.of("lettuce_chopped", "tomato_chopped")),
-            Map.entry("plate_fish", Set.of("fish_fried")),
-            Map.entry("plate_fries", Set.of("fries")),
-            Map.entry("plate_bread", Set.of("bread")),
-            Map.entry("plate_patty", Set.of("patty_cooked")),
-            Map.entry("plate_salad", Set.of("lettuce_chopped")),
-            Map.entry("plate_tomato", Set.of("tomato_chopped")));
+    static final Map<String, String> COOKER = Map.of("rice", "rice_cooked");
 
     private static NamespacedKey typeKey, plateKey, cookKey;
 
@@ -162,11 +157,13 @@ final class Items {
         return plate(next);
     }
 
+    /**
+     * Model for a plate: the pack has one for every partial combination of every recipe, named
+     * "plate_" + the sorted contents joined by "__" (see build/gen_pack.py RECIPE_SETS).
+     */
     static String plateModel(Set<String> contents) {
-        for (var e : PLATE_MODELS) {
-            if (contents.containsAll(e.getValue())) return e.getKey();
-        }
-        return "plate";
+        if (contents.isEmpty()) return "plate";
+        return "plate_" + String.join("__", new TreeSet<>(contents));
     }
 
     static String name(String type) {

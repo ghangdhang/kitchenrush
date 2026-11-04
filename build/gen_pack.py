@@ -213,10 +213,36 @@ def draw(name):
     elif name == 'fish':
         fish_body(c, 7.5, 8.5, 5.5, 3.5, FISH, FISH_D)
     elif name == 'fish_chopped':
-        c.ellipse(6, 6, 3.6, 2.4, FISH_MEAT)
-        c.ellipse(10.5, 10.5, 3.6, 2.4, FISH_MEAT)
-        c.dots([(4, 6), (6, 5), (9, 10), (11, 11)], FISH_MEAT_D)
-        c.rect(13, 3, 14, 4, FISH)
+        fish_body(c, 7, 8.5, 5.5, 3.5, FISH_MEAT, FISH_MEAT_D)
+        c.ellipse(7, 8.5, 5.5, 3.5, hexc('ffd0c2'), cond=lambda x, y: y < 7)
+        c.set(3, 7, OUTLINE)
+    elif name == 'rice':
+        c.rect(4, 6, 11, 13, hexc('c9a66b'))
+        c.rect(5, 4, 10, 6, hexc('b08a50'))
+        c.ellipse(8, 5, 3.2, 1.6, hexc('fbf6e8'))
+        c.dots([(6, 9), (9, 11), (8, 8)], hexc('a8844a'))
+    elif name == 'rice_cooked':
+        c.ellipse(8, 10, 6, 4, hexc('5a8fc8'))
+        c.ellipse(8, 8, 6, 3, hexc('ffffff'), cond=lambda x, y: y <= 9)
+        c.ellipse(8, 7, 4.5, 3.5, hexc('fbfaf5'), cond=lambda x, y: y <= 8)
+        c.dots([(6, 6), (9, 5), (10, 7)], hexc('e8e4d8'))
+    elif name == 'extinguisher':
+        c.rect(5, 4, 10, 14, hexc('d8342c'))
+        c.rect(5, 4, 6, 14, hexc('ff6a5a'))
+        c.rect(6, 2, 9, 3, hexc('2a2a2a'))
+        c.rect(10, 2, 12, 2, hexc('2a2a2a'))
+        c.rect(5, 8, 10, 9, hexc('f2f2f2'))
+    elif name == 'plate_sushi':
+        plate_base(c)
+        for x0 in (4, 9):
+            c.rect(x0, 9, x0 + 3, 11, hexc('fbfaf5'))
+            c.rect(x0, 8, x0 + 3, 8, FISH_MEAT)
+            c.set(x0 + 1, 8, hexc('ffd0c2'))
+    elif name == 'plate_meatset':
+        plate_base(c)
+        c.ellipse(5.5, 10, 2.6, 1.8, hexc('fbfaf5'))
+        c.ellipse(9.5, 9.5, 2.4, 1.7, PATTY)
+        fries(c, 10.5, 12, small=True)
     elif name == 'fish_fried':
         fish_body(c, 7, 8.5, 5.5, 3.5, FRY, FRY_D)
         c.ellipse(7, 8.5, 5.5, 3.5, FRY_L, cond=lambda x, y: y < 7)
@@ -304,7 +330,7 @@ ITEMS = ['tomato', 'tomato_chopped', 'lettuce', 'lettuce_chopped', 'meat', 'patt
          'burnt', 'bread', 'plate', 'plate_salad', 'plate_mixsalad', 'plate_bread', 'plate_patty', 'plate_burger',
          'pan', 'fish', 'fish_chopped', 'fish_fried', 'potato', 'potato_chopped', 'fries', 'dirty_plate',
          'plate_tomato', 'plate_fish', 'plate_fries', 'plate_fishfries', 'plate_special', 'plate_fishset',
-         'plate_cover', 'knife']
+         'plate_cover', 'knife', 'rice', 'rice_cooked', 'extinguisher', 'plate_sushi', 'plate_meatset']
 ICONS_ONLY = ['clock', 'coin']
 
 # ---------------------------------------------------------------- 3D models
@@ -331,7 +357,9 @@ for _n, _h in [('red', 'e8402a'), ('red_d', 'b52a1b'), ('red_l', 'ff8a6a'), ('pi
                ('soup', 'e2572f'), ('soup_l', 'ff9466'), ('dirt', '8a6a3a'), ('dirt_l', 'b09060'),
                ('char', '2a2a2a'), ('char_l', '4a4a4a'), ('smoke', 'a8a8a8'), ('pan', '3b3f45'), ('pan_in', '575d66'),
                ('handle', '7a5230'), ('black', '1a1a1a'), ('white', 'ffffff'),
-               ('steel', 'c9d1d8'), ('steel_d', '8f9aa3'), ('steel_l', 'eef2f5')]:
+               ('steel', 'c9d1d8'), ('steel_d', '8f9aa3'), ('steel_l', 'eef2f5'),
+               ('rice', 'fbfaf2'), ('rice_d', 'e6e1d2'), ('sack', 'c9a66b'), ('sack_d', 'a8844a'),
+               ('bowl', '5a8fc8'), ('bowl_d', '3f6fa6'), ('ext', 'd8342c'), ('ext_l', 'ff6a5a')]:
     pal(_n, _h)
 
 
@@ -462,23 +490,30 @@ def m_fish_pieces(m, t):
     m.box(t, 3.6, 0, 0.2, 3.9, 1.6, 2.4, 'fish')
 
 
-def m_fish_fried(m, t):
-    """A whole battered fish lying on its side: tapered body, tail fin, fin on top, eye and crumbs."""
+def m_fish_shape(m, t, body, light, fin, crumbs):
+    """Whole fish lying on its side: tapered body, forked tail, dorsal fin and eye (shared by raw and fried)."""
     # body tapers from head (-x) to tail (+x)
-    m.box(t, -4.2, 0, -1.0, -3.2, 2.4, 1.0, 'fry', top='fry_l')
-    m.box(t, -3.2, 0, -1.4, 1.2, 3.2, 1.4, 'fry', top='fry_l')
-    m.box(t, 1.2, 0.3, -1.1, 2.8, 2.8, 1.1, 'fry', top='fry_l')
-    m.box(t, 2.8, 0.7, -0.7, 3.8, 2.3, 0.7, 'fry')
-    # forked tail fin
-    m.box(t, 3.8, 1.2, -0.4, 4.6, 1.8, 0.4, 'fry_d')
-    m.box(t, 4.6, 1.8, -0.35, 5.8, 3.4, 0.35, 'fry_d', top='fry')
-    m.box(t, 4.6, -0.0, -0.35, 5.8, 1.2, 0.35, 'fry_d')
-    # dorsal fin and eye
-    m.box(t, -1.6, 3.2, -0.3, 1.0, 3.9, 0.3, 'fry_d')
+    m.box(t, -4.2, 0, -1.0, -3.2, 2.4, 1.0, body, top=light)
+    m.box(t, -3.2, 0, -1.4, 1.2, 3.2, 1.4, body, top=light)
+    m.box(t, 1.2, 0.3, -1.1, 2.8, 2.8, 1.1, body, top=light)
+    m.box(t, 2.8, 0.7, -0.7, 3.8, 2.3, 0.7, body)
+    m.box(t, 3.8, 1.2, -0.4, 4.6, 1.8, 0.4, fin)
+    m.box(t, 4.6, 1.8, -0.35, 5.8, 3.4, 0.35, fin, top=body)
+    m.box(t, 4.6, -0.0, -0.35, 5.8, 1.2, 0.35, fin)
+    m.box(t, -1.6, 3.2, -0.3, 1.0, 3.9, 0.3, fin)
     m.box(t, -3.6, 1.6, -1.45, -3.0, 2.2, 1.45, 'black')
-    # crispy crumbs
-    for x, y in ((-2, 0.8), (0, 1.8), (1.8, 1.1), (-0.8, 2.7)):
-        m.box(t, x - 0.3, y, -1.45, x + 0.3, y + 0.4, 1.45, 'fry_l')
+    if crumbs:
+        for x, y in ((-2, 0.8), (0, 1.8), (1.8, 1.1), (-0.8, 2.7)):
+            m.box(t, x - 0.3, y, -1.45, x + 0.3, y + 0.4, 1.45, light)
+
+
+def m_fish_fried(m, t):
+    m_fish_shape(m, t, 'fry', 'fry_l', 'fry_d', crumbs=True)
+
+
+def m_fish_raw_cut(m, t):
+    """Prepared raw fish: the same fish outline as the fried one, in raw pink with blue-grey fins."""
+    m_fish_shape(m, t, 'fish_meat', 'pink_in', 'fish_d', crumbs=False)
 
 
 def m_potato(m, t):
@@ -576,6 +611,46 @@ def m_knife(m, t):
         m.box(t, x0 + 0.05, 0.8, z - 0.25, x1 - 0.05, 0.85, z + 0.25, 'steel_l')  # rivets
 
 
+def m_rice_sack(m, t):
+    """A little burlap sack of raw rice, open at the top."""
+    m.disc(t, 3.6, 0, 4.5, 'sack', top='rice')
+    m.disc(t, 3.0, 4.5, 5.4, 'sack_d', top='rice')
+    m.disc(t, 2.4, 5.4, 5.8, 'rice', top='rice')
+    m.box(t, -3.7, 3.2, -0.4, 3.7, 3.6, 0.4, 'sack_d')
+
+
+def m_rice_mound(m, t):
+    m.ball(t, 2.6, 'rice', top='rice', squash=0.7)
+    m.box(t, -1.2, 3.4, -0.6, -0.7, 3.6, -0.1, 'rice_d')
+    m.box(t, 0.6, 3.2, 0.5, 1.1, 3.4, 1.0, 'rice_d')
+
+
+def m_rice_bowl(m, t):
+    """A blue rice bowl heaped with cooked rice."""
+    m.disc(t, 2.4, 0, 0.6, 'bowl_d')
+    m.disc(t, 3.6, 0.6, 3.0, 'bowl', top='rice')
+    dx, dy, dz, s = t
+    m_rice_mound(m, T(dx, dy + 2.4 * s, dz, s * 1.05))
+
+
+def m_nigiri(m, t):
+    """One piece of sushi: a rice block with a slice of raw fish draped on top."""
+    m.box(t, -1.6, 0, -1.0, 1.6, 1.6, 1.0, 'rice', top='rice')
+    m.box(t, -1.9, 1.6, -1.15, 1.9, 2.15, 1.15, 'fish_meat', top='pink_in')
+    m.box(t, -1.0, 2.15, -0.9, -0.6, 2.2, 0.9, 'white')
+
+
+def m_extinguisher(m, t):
+    """A red fire extinguisher standing upright, with a black hose and nozzle."""
+    m.disc(t, 2.2, 0, 8.6, 'ext', top='ext_l')
+    m.box(t, -2.25, 3.4, -2.25, 2.25, 4.6, 2.25, 'white')
+    m.disc(t, 1.2, 8.6, 9.6, 'black')
+    m.box(t, -0.4, 9.6, -0.4, 0.4, 10.8, 0.4, 'black')
+    m.box(t, -0.4, 10.4, 0.4, 0.4, 10.8, 3.2, 'black')
+    m.box(t, -1.4, 9.2, -1.6, 1.4, 9.6, -0.6, 'steel_d')
+    m.box(t, 1.6, 2.0, -0.3, 2.6, 8.0, 0.3, 'black')
+
+
 FOOD_3D = {
     'knife': lambda m: m_knife(m, T()),
     'plate_cover': lambda m: m_plate_cover(m, T()),
@@ -589,7 +664,10 @@ FOOD_3D = {
     'burnt': lambda m: m_burnt(m, T()),
     'bread': lambda m: (m_bun_bottom(m, T()), m_bun_top(m, T(dy=1.4))),
     'fish': lambda m: m_fish(m, T()),
-    'fish_chopped': lambda m: m_fish_pieces(m, T()),
+    'fish_chopped': lambda m: m_fish_raw_cut(m, T()),
+    'rice': lambda m: m_rice_sack(m, T()),
+    'rice_cooked': lambda m: m_rice_bowl(m, T()),
+    'extinguisher': lambda m: m_extinguisher(m, T()),
     'fish_fried': lambda m: m_fish_fried(m, T()),
     'potato': lambda m: m_potato(m, T()),
     'potato_chopped': lambda m: m_potato_sticks(m, T()),
@@ -618,6 +696,81 @@ FOOD_3D = {
                                 m_lettuce_flakes(m, T(dx=-1, dy=0.95, dz=2.8, s=0.45)),
                                 m_tomato_slices(m, T(dx=1.8, dy=0.95, dz=2.8, s=0.4))),
 }
+
+# ---------------------------------------------------------------- plates for every partial combination
+# Must match Items.Recipe in the plugin. The plugin names a plate's model "plate_" + its sorted contents
+# joined by "__", so every subset of every recipe gets its own model here.
+RECIPE_SETS = [
+    {'lettuce_chopped'},
+    {'lettuce_chopped', 'tomato_chopped'},
+    {'bread', 'patty_cooked'},
+    {'bread', 'patty_cooked', 'lettuce_chopped', 'tomato_chopped'},
+    {'fish_fried', 'fries', 'lettuce_chopped', 'tomato_chopped'},
+    {'fish_chopped', 'rice_cooked'},
+    {'fries', 'patty_cooked', 'rice_cooked'},
+]
+
+ON_PLATE = {
+    'lettuce_chopped': lambda m, t: m_lettuce_flakes(m, t),
+    'tomato_chopped': lambda m, t: m_tomato_slices(m, t),
+    'patty_cooked': lambda m, t: m_patty(m, t),
+    'fish_fried': lambda m, t: m_fish_fried(m, t),
+    'fish_chopped': lambda m, t: m_fish_raw_cut(m, t),
+    'fries': lambda m, t: m_fries(m, t),
+    'rice_cooked': lambda m, t: m_rice_mound(m, t),
+    'bread': lambda m, t: (m_bun_bottom(m, t), m_bun_top(m, T(t[0], t[1] + 1.25 * t[3], t[2], t[3]))),
+}
+# Spots on the plate for 1-4 side-by-side items: (dx, dz, scale).
+SLOTS = {
+    1: [(0, 0, 0.85)],
+    2: [(-2.3, 0, 0.62), (2.5, 0, 0.62)],
+    3: [(-2.5, -1.8, 0.52), (2.5, -1.8, 0.52), (0, 2.5, 0.52)],
+    4: [(-2.5, -2.2, 0.46), (2.5, -2.2, 0.46), (-2.4, 2.4, 0.46), (2.4, 2.4, 0.46)],
+}
+TOP = 0.95  # plate surface height
+
+
+def plate_model_name(contents):
+    return 'plate_' + '__'.join(sorted(contents))
+
+
+def compose_plate(m, contents):
+    m_plate(m, T())
+    rest = set(contents)
+    if 'bread' in rest:
+        # Burger stack: bottom bun, patty, tomato, lettuce, top bun (whatever of those is on the plate).
+        y = TOP
+        m_bun_bottom(m, T(dy=y))
+        y += 1.2
+        if 'patty_cooked' in rest:
+            m_patty(m, T(dy=y, s=1.05))
+            y += 1.7
+        if 'tomato_chopped' in rest:
+            m.disc(T(dy=y), 3.4, 0, 0.6, 'red', top='pink_in')
+            y += 0.6
+        if 'lettuce_chopped' in rest:
+            m.disc(T(dy=y), 4.3, 0, 0.5, 'green', top='green_l')
+            y += 0.5
+        m_bun_top(m, T(dy=y))
+        return
+    if {'rice_cooked', 'fish_chopped'} <= rest:
+        # Sushi: two pieces of nigiri side by side.
+        m_nigiri(m, T(dx=-2.0, dy=TOP))
+        m_nigiri(m, T(dx=2.0, dy=TOP))
+        rest -= {'rice_cooked', 'fish_chopped'}
+        if not rest:
+            return
+    items = sorted(rest)
+    for item, (dx, dz, s) in zip(items, SLOTS[len(items)]):
+        ON_PLATE[item](m, T(dx=dx, dy=TOP, dz=dz, s=s))
+
+
+PLATE_COMBOS = {}
+for rs in RECIPE_SETS:
+    keys = sorted(rs)
+    for mask in range(1, 1 << len(keys)):
+        combo = frozenset(k for i, k in enumerate(keys) if mask >> i & 1)
+        PLATE_COMBOS[plate_model_name(combo)] = combo
 
 palette = Canvas(16, 16)
 for i, n in enumerate(PAL_ORDER):
@@ -881,6 +1034,33 @@ def tex_plate_station():
     return c
 
 
+def tex_rice_cooker_side():
+    """Rounded white rice cooker with a small blue display and a red/green button."""
+    c = Canvas()
+    noise_fill(c, hexc('f4f1ea'), 2, 91)
+    for x in range(16):
+        c.set(x, 0, hexc('d9d4c8'))
+        c.set(x, 1, hexc('ffffff'))
+        c.set(x, 14, hexc('d9d4c8'))
+        c.set(x, 15, hexc('a8a294'))
+    c.rect(4, 5, 11, 8, hexc('3a4a5a'))
+    c.rect(5, 6, 10, 7, hexc('7fd0ff'))
+    c.rect(5, 10, 6, 11, hexc('e8402a'))
+    c.rect(9, 10, 10, 11, hexc('3fa535'))
+    return c
+
+
+def tex_rice_cooker_top():
+    """Lid seen from above: a rim, a domed centre and a handle."""
+    c = Canvas()
+    noise_fill(c, hexc('ebe7de'), 2, 92)
+    frame(c, hexc('c9c3b5'))
+    c.ellipse(8, 8, 5.5, 5.5, hexc('fbfaf6'))
+    c.rect(5, 7, 10, 8, hexc('8f9aa3'))
+    c.rect(6, 7, 9, 8, hexc('5d6770'))
+    return c
+
+
 def tex_cauldron_side():
     c = Canvas()
     brushed(c, STEEL, 61)
@@ -970,6 +1150,9 @@ BLOCK_TEXTURES = {
     'birch_planks': tex_board,
     # plate stand and drying rack (smooth quartz uses quartz_block_bottom on every face)
     'quartz_block_bottom': tex_plate_station,
+    # rice cooker (bone block)
+    'bone_block_side': tex_rice_cooker_side,
+    'bone_block_top': tex_rice_cooker_top,
     # fryer and sink (cauldrons): stainless steel
     'cauldron_side': tex_cauldron_side,
     'cauldron_top': tex_cauldron_top,
@@ -1081,6 +1264,13 @@ providers.append({'type': 'bitmap', 'file': 'kitchen:font/pip.png', 'height': 7,
 glyphs.append(f'pip {ord(ch):04X} {pip.width() + 1}')
 
 files['assets/kitchen/textures/item/palette.png'] = png(palette)
+
+for name, combo in PLATE_COMBOS.items():
+    mdl = Model()
+    compose_plate(mdl, combo)
+    files[f'assets/kitchen/models/item/{name}.json'] = json.dumps(mdl.json())
+    files[f'assets/kitchen/items/{name}.json'] = json.dumps(
+        {'model': {'type': 'minecraft:model', 'model': f'kitchen:item/{name}'}})
 
 for name, cv, height, ascent in HUD_GLYPHS:
     code += 1
@@ -1210,7 +1400,14 @@ def render_iso(model, k=6):
     return c
 
 
-iso_names = list(FOOD_3D)
+PREVIEW = {k: v for k, v in FOOD_3D.items() if not k.startswith('plate_') or k == 'plate_cover'}
+for combo in (['lettuce_chopped', 'patty_cooked', 'tomato_chopped'], ['bread', 'lettuce_chopped', 'tomato_chopped'],
+              ['bread', 'lettuce_chopped', 'patty_cooked', 'tomato_chopped'], ['fish_chopped', 'rice_cooked'],
+              ['fish_chopped'], ['fries', 'patty_cooked', 'rice_cooked'], ['patty_cooked', 'rice_cooked'],
+              ['fish_fried', 'fries', 'lettuce_chopped', 'tomato_chopped'], ['fish_fried', 'lettuce_chopped']):
+    PREVIEW[plate_model_name(combo)] = (lambda c: lambda m: compose_plate(m, c))(combo)
+FOOD_3D_ALL = PREVIEW
+iso_names = list(PREVIEW)
 cols = 8
 tile_w, tile_h = 34 * 6, 30 * 6
 tex_all = list(BLOCK_TEXTURES.items()) + [(k, v[0]) for k, v in ANIMATED_TEXTURES.items()]
@@ -1218,7 +1415,7 @@ per_row = (tile_w * cols) // 136
 sheet3d = Canvas(tile_w * cols, tile_h * ((len(iso_names) + cols - 1) // cols) + 136 * ((len(tex_all) + per_row - 1) // per_row))
 for i, n in enumerate(iso_names):
     mdl = Model()
-    FOOD_3D[n](mdl)
+    PREVIEW[n](mdl)
     r = render_iso(mdl)
     bx, by = (i % cols) * tile_w, (i // cols) * tile_h
     for y in range(r.h):
